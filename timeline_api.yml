@@ -1,0 +1,161 @@
+swagger: "2.0"
+info:
+  description: This is the swagger file that goes with our server code
+  version: "1.0.0"
+  title: Swagger ReST Article
+consumes:
+  - application/json
+produces:
+  - application/json
+
+basePath: /api
+
+# Paths supported by the server application
+paths:
+  /login:
+    get:
+      operationId: timeline_api.login
+      tags:
+        - Timeline
+      summary: check if user can login to system
+      description: check user and password
+      parameters:
+        - name: username
+          in: query
+          type: string
+          description: user name
+          required: true
+        - name: password
+          in: query
+          type: string
+          description: password for system
+          required: true
+      responses:
+        200:
+          description: user Successfully logged in
+
+  /get_all_names:
+    get:
+      operationId: timeline_api.get_all_names
+      tags:
+        - Timeline
+      summary: get all the data for the cards
+      description: get name, url, id, creator and create time.
+      responses:
+        200:
+          description: Successfully read people list operation
+          schema:
+            type: array
+            items:
+              properties:
+                name:
+                  type: string
+                id:
+                  type: string
+                url:
+                  type: string
+                create_time:
+                  type: string
+                create_user:
+                  type: string
+
+  /create:
+    post:
+      operationId: timeline_api.create_timeline
+      tags:
+        - Timeline
+      summary: creates a new timeline and addss it to db
+      description: creates the new timeline
+      parameters:
+        - name: new_timeline
+          in: body
+          description: timeline to create
+          required: True
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                description: the name of the timeline
+              url:
+                type: string
+                description: the url for the timeline
+              create_user:
+                type: string
+                description: the user who created the timeline
+      responses:
+        200:
+          description: Successfully created new timeline
+
+  /timeline/{timeline_url}:
+    get:
+      operationId: timeline_api.get_timeline
+      tags:
+        - Timeline
+      summary: get all timeline events
+      description: get all the timeline events by the url
+      parameters:
+        - name: timeline_url
+          in: path
+          description: the address of the timeline
+          type: string
+          required: True
+      responses:
+        200:
+          description: Successfully read timeline events from db.
+          schema:
+            properties:
+              events:
+                type: array
+
+
+  /timeline/{timeline_url}/add:
+    post:
+      operationId: timeline_api.add_event
+      tags:
+        - Timeline
+      summary: Add new event to timeline
+      description: adds the new event to timeline
+      parameters:
+        - name: timeline_url
+          in: path
+          description: the address of the timeline
+          type: string
+          required: True
+        - name: new_event
+          in: body
+          description: new_event to create
+          required: True
+          schema:
+            type: object
+            properties:
+              main_header:
+                type: string
+                description: main header of event
+              second_header:
+                type: string
+                description: secondary header of event
+              text:
+                type: string
+                description: event text
+              date:
+                type: string
+                description: the date the event accured
+              icon:
+                type: string
+                description: icon for event.
+              user:
+                type: string
+                description: the user who created the timeline
+            required:
+              - main_header
+              - date
+              - user
+            additionalProperties:
+              type: string
+      responses:
+        201:
+          description: Successfully created new event
+
+
+
