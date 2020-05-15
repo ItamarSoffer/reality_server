@@ -14,7 +14,7 @@ basePath: /api
 paths:
   /login:
     get:
-      operationId: timeline_api.login
+      operationId: reality_server.api.login
       tags:
         - Timeline
       summary: check if user can login to system
@@ -36,7 +36,7 @@ paths:
 
   /get_all_names:
     get:
-      operationId: timeline_api.get_all_names
+      operationId: reality_server.api.get_all_names
       tags:
         - Timeline
       summary: get all the data for the cards
@@ -61,7 +61,7 @@ paths:
 
   /create:
     post:
-      operationId: timeline_api.create_timeline
+      operationId: reality_server.api.create_timeline
       tags:
         - Timeline
       summary: creates a new timeline and addss it to db
@@ -89,7 +89,7 @@ paths:
 
   /timeline/{timeline_url}:
     get:
-      operationId: timeline_api.get_timeline
+      operationId: reality_server.api.get_timeline
       tags:
         - Timeline
       summary: get all timeline events
@@ -111,7 +111,7 @@ paths:
 
   /timeline/{timeline_url}/add:
     post:
-      operationId: timeline_api.add_event
+      operationId: reality_server.api.add_event
       tags:
         - Timeline
       summary: Add new event to timeline
