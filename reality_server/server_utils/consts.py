@@ -3,10 +3,20 @@ TABLES_COLUMNS = {
     "EVENTS": [
         "timeline_id",
         "event_id",
-        "event_data",
+        "header",
+        "text",
+        "link",
         "event_time",
         "insertion_time",
         "create_user",
+    ],
+    "EVENTS_DESIGN": [
+        "event_id",
+        "text_color",
+        "background_color",
+        "frame_color",
+        "icon_color",
+        "icon"
     ],
     "USERS": ["username", "password"],
 }
@@ -15,6 +25,7 @@ TABLES_COLUMNS = {
 TABLES_NAMES = {
     "TIMELINE_IDS": "timeline_ids",
     "EVENTS": "events",
+    "EVENTS_DESIGN": "events_design",
     "USERS": "users",
 }
 
