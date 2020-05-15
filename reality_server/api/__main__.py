@@ -25,6 +25,7 @@ def login(username, password):
     """
     checks if the username and password matches and can connect to system.
     returns 200 if success and 404 if not (no permissions or wrong password)
+    in the UNIT, this will change to the LDAP authentication.
     :param username: string
     :param password: string
     :return:
@@ -72,17 +73,14 @@ def get_timeline(timeline_url):
         )
 
     get_timeline_query = """
-    SELECT event_data 
-      FROM events
-     WHERE timeline_id = ? 
+    SELECT *
+      FROM full_event_data
+	 WHERE timeline_id = ?
      ORDER BY event_time DESC """
     results = query(
         db_file=DB_PATH, query_string=get_timeline_query, args=[timeline_id]
     )
-    events = []
-    for res in results:
-        events.append(json.loads(res["event_data"]))
-    return {"events": events}
+    return {"events": results}
 
 
 def add_event(timeline_url, new_event):
@@ -90,28 +88,53 @@ def add_event(timeline_url, new_event):
     adds new event to timeline.
     :param timeline_url: the url of the timeline to add to.
     :param new_event: a dict with the params of the event. it contains:
-        - main header
+        - header
+        - text
         - date
         - user
-        - text
+
+        Additional that can be input:
+        - link
+        - text_color
+        - background_color
+        - frame_color
         - icon
-        - can get more data.
     in the yml it is defined what must be.
 
 
     :return:
     """
+    # TODO: check the inputs that is valid.
     timeline_id = _get_id_by_url(url=timeline_url)
     if timeline_id is None:
         return make_response(
             "url '{url}' does not exists!".format(url=timeline_url), 404
         )
-    create_user = new_event.get("user")
-    event_time = new_event.get("date")
     event_id = str(uuid.uuid4())
+    _add_event_data(timeline_id=timeline_id,
+                    event_id=event_id,
+                    new_event=new_event)
+
+    _add_event_design(event_id, new_event)
+
+    return make_response(f"added new record to '{timeline_url}'!", 200)
+
+
+def _add_event_data(timeline_id, event_id, new_event):
+    """
+    gets the timeline_id, event_id and the new event data.
+    inserts the data of the new event to EVENTS table
+    :param timeline_id:
+    :param event_id:
+    :param new_event:
+    :return:
+    """
+    header = new_event.get("header")
+    text = new_event.get("text")
+    link = new_event.get("link", None)
+    event_time = new_event.get("date")
     insertion_time = get_timestamp()
-    new_event.pop("user", None)
-    text_event_data = json.dumps(new_event)
+    create_user = new_event.get("user")
 
     insert(
         DB_PATH,
@@ -120,16 +143,42 @@ def add_event(timeline_url, new_event):
         data=[
             timeline_id,
             event_id,
-            text_event_data,
+            header,
+            text,
+            link,
             event_time,
             insertion_time,
             create_user,
         ],
     )
-    return make_response(f"added new record to '{timeline_url}'!", 200)
-    # print(timeline_url)
-    # print(new_event)
-    # print(type(new_event))
+    print("inserted data")
+
+
+def _add_event_design(event_id, new_event):
+    """
+    inserts the design of event to the table.
+    :param event_id:
+    :param new_event:
+    :return:
+    """
+    text_color = new_event.get("text_color", "#000")  # black
+    background_color = new_event.get("background_color", 'rgb(255, 255, 255)')
+    frame_color = new_event.get("frame_color", 'rgb(33, 150, 243)')
+    icon_color = new_event.get("icon_color", "#fff")  # white
+    icon = new_event.get("icon", "")  # TODO: icon dict
+
+    insert(DB_PATH,
+           table=TABLES_NAMES["EVENTS_DESIGN"],
+           columns=TABLES_COLUMNS["EVENTS_DESIGN"],
+           data=[
+               event_id,
+               text_color,
+               background_color,
+               frame_color,
+               icon_color,
+               icon
+           ])
+    print("inserted desigh")
 
 
 def create_timeline(new_timeline):
@@ -147,7 +196,7 @@ def create_timeline(new_timeline):
             "requested url: {url} already exists!".format(url=url), 404
         )
     if url.lower() in RESERVED_TIMELINE_NAMES:
-        return make_response("illegal url! Please select another", 404)
+        return make_response("Illegal url! Please select another", 404)
     create_time = get_timestamp()
     # uniq id:
     timeline_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, url))

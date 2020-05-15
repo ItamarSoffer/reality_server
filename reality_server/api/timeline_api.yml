@@ -129,27 +129,40 @@ paths:
           schema:
             type: object
             properties:
-              main_header:
+              header:
                 type: string
-                description: main header of event
-              second_header:
-                type: string
-                description: secondary header of event
+                description: main header of event.
               text:
                 type: string
-                description: event text
+                description: event text.
               date:
                 type: string
-                description: the date the event accured
-              icon:
-                type: string
-                description: icon for event.
+                description: the date the event accured.
               user:
                 type: string
-                description: the user who created the timeline
+                description: the user who created the timeline.
+              link:
+                type: string
+                description: additional link for more data for the event.
+              text_color:
+                type: string
+                description: the color of the text
+              background_color:
+                type: string
+                description: frame ackground color
+              frame_color:
+                type: string
+                description: color for icon and frame
+              icon_color:
+                type: string
+                description: the icon itself color.
+              icon:
+                type: string
+                description: the icon for the timeline
             required:
-              - main_header
+              - header
               - date
+              - text
               - user
             additionalProperties:
               type: string
