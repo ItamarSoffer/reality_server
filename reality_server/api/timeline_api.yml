@@ -41,6 +41,12 @@ paths:
         - Timeline
       summary: get all the data for the cards
       description: get name, url, id, creator and create time.
+      parameters:
+        - name: num
+          in: query
+          type: integer
+          description: amount of timelines to return
+          required: false
       responses:
         200:
           description: Successfully read people list operation
@@ -59,7 +65,7 @@ paths:
                 create_user:
                   type: string
 
-  /create:
+  /create_timeline:
     post:
       operationId: reality_server.api.create_timeline
       tags:
@@ -83,6 +89,10 @@ paths:
               create_user:
                 type: string
                 description: the user who created the timeline
+              timeline_description:
+                type: string
+                description: timeline description
+
       responses:
         200:
           description: Successfully created new timeline
