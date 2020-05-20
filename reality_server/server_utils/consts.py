@@ -29,6 +29,6 @@ TABLES_NAMES = {
     "USERS": "users",
 }
 
-RESERVED_TIMELINE_NAMES = ["add", "delete", "del", ".", "?"]
+RESERVED_TIMELINE_NAMES = ["add", "delete", "del", ".", "?", "/"]
 
 DB_PATH = r"C:\Scripts\Reality\sqlite_db\timeline.db"
