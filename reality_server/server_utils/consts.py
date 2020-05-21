@@ -31,4 +31,10 @@ TABLES_NAMES = {
 
 RESERVED_TIMELINE_NAMES = ["add", "delete", "del", ".", "?", "/"]
 
+SMALL_ABC = [chr(i) for i in range(ord("a"), ord("z") + 1)]
+CAPITAL_ABC = [chr(i) for i in range(ord("A"), ord("Z") + 1)]
+NUMS = [str(i) for i in range(0, 10)]
+
+ALLOWED_CHARS = SMALL_ABC + CAPITAL_ABC + NUMS + ["_", "-", "(", ")"]
+
 DB_PATH = r"C:\Scripts\Reality\sqlite_db\timeline.db"

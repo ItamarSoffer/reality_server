@@ -201,9 +201,10 @@ def create_timeline(new_timeline):
         return make_response(
             "Requested url: {url} already exists!".format(url=url), 201
         )
-    elif _check_allowed_chars(url, ALLOWED_CHARS):
+    elif not _check_allowed_chars(url, ALLOWED_CHARS):
         return make_response(
-            "Non valid chars in URL!. Only a-zA-Z and _-".format(url=url), 201
+            "The name has invalid characters." +
+            " Enter letters, numbers, hyphens or brackets.", 201
         )
     elif url.lower() in RESERVED_TIMELINE_NAMES:
         return make_response("Illegal url! Please select another", 201)
@@ -211,12 +212,12 @@ def create_timeline(new_timeline):
     # uniq id:
     timeline_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, url))
     # insert record
-    insert(
-        DB_PATH,
-        table=TABLES_NAMES["TIMELINE_IDS"],
-        columns=TABLES_COLUMNS["TIMELINE_IDS"],
-        data=[name, timeline_id, url, create_time, create_user],
-    )
+    # insert(
+    #     DB_PATH,
+    #     table=TABLES_NAMES["TIMELINE_IDS"],
+    #     columns=TABLES_COLUMNS["TIMELINE_IDS"],
+    #     data=[name, timeline_id, url, create_time, create_user],
+    # )
     return make_response(f"new Timeline '{name}' created!", 200)
 
 
