@@ -7,9 +7,9 @@ from ..server_utils.consts import (
     TABLES_NAMES,
     RESERVED_TIMELINE_NAMES,
     DB_PATH,
+    ALLOWED_CHARS
 )
 from ..server_utils.db_functions import query, insert, create_connection, run
-
 
 # TODO: consts page with all the things.
 # TODO: save the queries not in the python file, in sql files.
@@ -46,16 +46,22 @@ def login(username, password):
             )
 
 
-def get_all_names():
+def get_all_names(num=None):
     """
     returns all the data from the timeline_ids table, for the main cards view.
     :return: 
     """
+
     timelines_query = """
     SELECT *
       FROM timeline_ids
+      ORDER BY create_time DESC
     """
-    results = query(DB_PATH, timelines_query)
+    if num is None:
+        results = query(DB_PATH, timelines_query)
+    else:
+        timelines_query += ' LIMIT ?'
+        results = query(DB_PATH, timelines_query, [num])
     return results
 
 
@@ -193,10 +199,14 @@ def create_timeline(new_timeline):
     create_user = new_timeline.get("create_user", None)
     if _is_url_exists(url):
         return make_response(
-            "requested url: {url} already exists!".format(url=url), 404
+            "Requested url: {url} already exists!".format(url=url), 201
         )
-    if url.lower() in RESERVED_TIMELINE_NAMES:
-        return make_response("Illegal url! Please select another", 404)
+    elif _check_allowed_chars(url, ALLOWED_CHARS):
+        return make_response(
+            "Non valid chars in URL!. Only a-zA-Z and _-".format(url=url), 201
+        )
+    elif url.lower() in RESERVED_TIMELINE_NAMES:
+        return make_response("Illegal url! Please select another", 201)
     create_time = get_timestamp()
     # uniq id:
     timeline_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, url))
@@ -213,6 +223,16 @@ def create_timeline(new_timeline):
 # ##############################################
 # #########           UTILS            #########
 # ##############################################
+
+def _check_allowed_chars(string, allowed_chars):
+    """
+    checks if all chars in string are in allowed_chars list
+    :param string: string to check
+    :param allowed_chars: list of allowed chars
+    :return: bool
+    """
+    is_cleared = [c in allowed_chars for c in string]
+    return all(is_cleared)
 
 
 def get_timestamp():
