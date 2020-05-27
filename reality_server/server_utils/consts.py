@@ -19,6 +19,18 @@ TABLES_COLUMNS = {
         "icon"
     ],
     "USERS": ["username", "password"],
+    "EVENTS_2": [
+        "timeline_id",
+        "event_id",
+        "header",
+        "text",
+        "link",
+        "event_time",
+        "frame_color",
+        "icon",
+        "insertion_time",
+        "create_user",
+    ]
 }
 
 
@@ -27,6 +39,7 @@ TABLES_NAMES = {
     "EVENTS": "events",
     "EVENTS_DESIGN": "events_design",
     "USERS": "users",
+    "EVENTS_2": 'events_2'
 }
 
 RESERVED_TIMELINE_NAMES = ["add", "delete", "del", ".", "?", "/"]
@@ -37,4 +50,4 @@ NUMS = [str(i) for i in range(0, 10)]
 
 ALLOWED_CHARS = SMALL_ABC + CAPITAL_ABC + NUMS + ["_", "-", "(", ")"]
 
-DB_PATH = r"C:\Scripts\Reality\sqlite_db\timeline.db"
+DB_PATH = r"C:\Scripts\Reality\server\sqlite_db\timeline.db"

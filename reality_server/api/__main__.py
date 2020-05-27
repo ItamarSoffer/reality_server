@@ -10,6 +10,7 @@ from ..server_utils.consts import (
     ALLOWED_CHARS
 )
 from ..server_utils.db_functions import query, insert, create_connection, run
+from time import sleep
 
 # TODO: consts page with all the things.
 # TODO: save the queries not in the python file, in sql files.
@@ -72,6 +73,7 @@ def get_timeline(timeline_url):
     :param timeline_url:
     :return:
     """
+    sleep(2)
     timeline_id = _get_id_by_url(url=timeline_url)
     if timeline_id is None:
         return make_response(
@@ -80,7 +82,7 @@ def get_timeline(timeline_url):
 
     get_timeline_query = """
     SELECT *
-      FROM full_event_data
+      FROM events_2
 	 WHERE timeline_id = ?
      ORDER BY event_time DESC """
     results = query(
@@ -114,14 +116,13 @@ def add_event(timeline_url, new_event):
     timeline_id = _get_id_by_url(url=timeline_url)
     if timeline_id is None:
         return make_response(
-            "url '{url}' does not exists!".format(url=timeline_url), 404
+            "url '{url}' does not exists!".format(url=timeline_url), 201
         )
     event_id = str(uuid.uuid4())
+
     _add_event_data(timeline_id=timeline_id,
                     event_id=event_id,
                     new_event=new_event)
-
-    _add_event_design(event_id, new_event)
 
     return make_response(f"added new record to '{timeline_url}'!", 200)
 
@@ -129,7 +130,7 @@ def add_event(timeline_url, new_event):
 def _add_event_data(timeline_id, event_id, new_event):
     """
     gets the timeline_id, event_id and the new event data.
-    inserts the data of the new event to EVENTS table
+    inserts the data of the new event to EVENTS_2 table
     :param timeline_id:
     :param event_id:
     :param new_event:
@@ -138,14 +139,16 @@ def _add_event_data(timeline_id, event_id, new_event):
     header = new_event.get("header")
     text = new_event.get("text")
     link = new_event.get("link", None)
-    event_time = new_event.get("date")
+    event_time = f'{new_event.get("date")} {new_event.get("hour", "")}'
+    frame_color = new_event.get("frame_color", 'rgb(33, 150, 243)')
+    icon = new_event.get("icon", "")
     insertion_time = get_timestamp()
     create_user = new_event.get("user")
 
     insert(
         DB_PATH,
-        table=TABLES_NAMES["EVENTS"],
-        columns=TABLES_COLUMNS["EVENTS"],
+        table=TABLES_NAMES["EVENTS_2"],
+        columns=TABLES_COLUMNS["EVENTS_2"],
         data=[
             timeline_id,
             event_id,
@@ -153,38 +156,13 @@ def _add_event_data(timeline_id, event_id, new_event):
             text,
             link,
             event_time,
+            frame_color,
+            icon,
             insertion_time,
             create_user,
         ],
     )
     print("inserted data")
-
-
-def _add_event_design(event_id, new_event):
-    """
-    inserts the design of event to the table.
-    :param event_id:
-    :param new_event:
-    :return:
-    """
-    text_color = new_event.get("text_color", "#000")  # black
-    background_color = new_event.get("background_color", 'rgb(255, 255, 255)')
-    frame_color = new_event.get("frame_color", 'rgb(33, 150, 243)')
-    icon_color = new_event.get("icon_color", "#fff")  # white
-    icon = new_event.get("icon", "")  # TODO: icon dict
-
-    insert(DB_PATH,
-           table=TABLES_NAMES["EVENTS_DESIGN"],
-           columns=TABLES_COLUMNS["EVENTS_DESIGN"],
-           data=[
-               event_id,
-               text_color,
-               background_color,
-               frame_color,
-               icon_color,
-               icon
-           ])
-    print("inserted desigh")
 
 
 def create_timeline(new_timeline):
