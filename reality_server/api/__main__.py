@@ -13,7 +13,7 @@ from ..server_utils.consts import (
     SYSTEM_NAME,
     XLSX_FOLDER
 )
-from ..server_utils.db_functions import query, insert, create_connection, run, query_to_df
+from ..server_utils.db_functions import query_to_json, insert, query_to_df
 from time import sleep
 
 # TODO: consts page with all the things.
@@ -108,7 +108,7 @@ def login(username, password):
     SELECT *
     FROM users 
     where username= ? """
-    results = query(DB_PATH, users_query, [username])
+    results = query_to_json(DB_PATH, users_query, [username])
     if len(results) == 0:
         return make_response("{user} has no permissions".format(user=username), 404)
     else:
@@ -132,10 +132,10 @@ def get_all_names(num=None):
       ORDER BY create_time DESC
     """
     if num is None:
-        results = query(DB_PATH, timelines_query)
+        results = query_to_json(DB_PATH, timelines_query)
     else:
         timelines_query += ' LIMIT ?'
-        results = query(DB_PATH, timelines_query, [num])
+        results = query_to_json(DB_PATH, timelines_query, [num])
     if results is None:
         return make_response(
             "Query Error!", 500
@@ -163,7 +163,7 @@ def get_timeline(timeline_url):
       FROM events_2
 	 WHERE timeline_id = ?
      ORDER BY event_time DESC """
-    results = query(
+    results = query_to_json(
         db_file=DB_PATH, query_string=get_timeline_query, args=[timeline_id]
     )
     if results is None:
@@ -273,18 +273,36 @@ def create_timeline(new_timeline):
     # uniq id:
     timeline_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, url))
     # insert record
-    # insert(
-    #     DB_PATH,
-    #     table=TABLES_NAMES["TIMELINE_IDS"],
-    #     columns=TABLES_COLUMNS["TIMELINE_IDS"],
-    #     data=[name, timeline_id, url, create_time, create_user],
-    # )
+    insert(
+        DB_PATH,
+        table=TABLES_NAMES["TIMELINE_IDS"],
+        columns=TABLES_COLUMNS["TIMELINE_IDS"],
+        data=[name, timeline_id, url, create_time, create_user],
+    )
     return make_response(f"new Timeline '{name}' created!", 200)
+
+
+def get_timeline_basic_data(timeline_url):
+    """
+    returns the basic timeline data.
+    :param timeline_url:
+    :return:
+    """
+    data_query = """
+    SELECT *
+      FROM timeline_ids
+      WHERE url = ? """
+    results = query_to_json(
+        db_file=DB_PATH, query_string=data_query, args=[timeline_url]
+    )
+    print(results)
+    return results
 
 
 # ##############################################
 # #########           UTILS            #########
 # ##############################################
+
 
 def _check_allowed_chars(string, allowed_chars):
     """
@@ -312,7 +330,7 @@ def _is_url_exists(url):
     FROM timeline_ids
     WHERE url = ? """
 
-    return query(DB_PATH, url_query_check, [url])
+    return query_to_json(DB_PATH, url_query_check, [url])
 
 
 def _get_id_by_url(url):
@@ -321,7 +339,7 @@ def _get_id_by_url(url):
     FROM timeline_ids
     WHERE url = ?
     """
-    results = query(DB_PATH, q, [url])
+    results = query_to_json(DB_PATH, q, [url])
     if results:
         return results[0]["id"]
     else:
