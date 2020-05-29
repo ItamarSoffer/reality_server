@@ -1,15 +1,19 @@
 import uuid
 import json
-from flask import make_response, abort
+import os
+import pandas as pd
+from flask import make_response, abort, send_file
 from datetime import datetime
 from ..server_utils.consts import (
     TABLES_COLUMNS,
     TABLES_NAMES,
     RESERVED_TIMELINE_NAMES,
     DB_PATH,
-    ALLOWED_CHARS
+    ALLOWED_CHARS,
+    SYSTEM_NAME,
+    XLSX_FOLDER
 )
-from ..server_utils.db_functions import query, insert, create_connection, run
+from ..server_utils.db_functions import query, insert, create_connection, run, query_to_df
 from time import sleep
 
 # TODO: consts page with all the things.
@@ -20,6 +24,75 @@ from time import sleep
 
 
 # ##################################################
+
+def get_timeline_xlsx_file(timeline_url):
+    if not _is_url_exists(timeline_url):
+        return make_response(
+            "URL: {url} Does not exists!".format(url=timeline_url), 201
+        )
+    clear_pass_files(XLSX_FOLDER, timeline_url)
+    xlsx_file_path = _create_timeline_xlsx(timeline_url)
+    print(xlsx_file_path)
+    xlsx_file_name = os.path.basename(xlsx_file_path)
+    print(xlsx_file_name)
+
+    return send_file(xlsx_file_path,
+                     attachment_filename=xlsx_file_name,
+                     cache_timeout=-1,
+                     as_attachment=True
+                     )
+
+
+def _create_timeline_xlsx(timeline_url):
+    """
+    queries the db and creates timeline xlsx
+    returns the fill path of the created file
+    :param timeline_url:
+    :return:
+    """
+
+    events_query = """
+    SELECT name, header, text, link, event_time, icon, insertion_time, e.create_user
+FROM events_2 e
+ INNER JOIN timeline_ids t
+ ON (e.timeline_id = t.id)
+ WHERE url = ?"""
+
+    timeline_data_query = """
+    SELECT name, url, description, create_time, create_user
+    FROM timeline_ids
+    WHERE url = ?
+    """
+
+    timeline_events_df = query_to_df(db_file=DB_PATH, query_string=events_query, args=[timeline_url])
+    timeline_data_df = query_to_df(db_file=DB_PATH, query_string=timeline_data_query, args=[timeline_url])
+    file_name = "{sys_name}_{timeline_name}@{time}.xlsx".format(sys_name=SYSTEM_NAME,
+                                                               timeline_name=timeline_url,
+                                                               time=datetime.today().strftime('%Y%m%d-%H%M%S'))
+    xlsx_path = os.path.join(XLSX_FOLDER, file_name)
+
+    writer = pd.ExcelWriter(xlsx_path, engine='xlsxwriter')
+    timeline_events_df.to_excel(writer, sheet_name=f'{timeline_url}_events',index=False)
+    timeline_data_df.to_excel(writer, sheet_name='Timeline_Data', index=False)
+
+    writer.save()
+    return xlsx_path
+
+
+def clear_pass_files(folder, timeline_url):
+    """
+    clear pass xlsx files that was created by the system.
+    :param folder:
+    :param timeline_url:
+    :return:
+    """
+    file_name = "{sys_name}_{timeline_name}@".format(sys_name=SYSTEM_NAME,
+                                                     timeline_name=timeline_url,
+                                                     )
+    for root, dirs, files in os.walk(folder):
+        for f in files:
+            if f.startswith(file_name):
+                os.remove(os.path.join(root, f))
 
 
 def login(username, password):
@@ -63,7 +136,12 @@ def get_all_names(num=None):
     else:
         timelines_query += ' LIMIT ?'
         results = query(DB_PATH, timelines_query, [num])
-    return results
+    if results is None:
+        return make_response(
+            "Query Error!", 500
+        )
+    else:
+        return results
 
 
 def get_timeline(timeline_url):
@@ -73,11 +151,11 @@ def get_timeline(timeline_url):
     :param timeline_url:
     :return:
     """
-    sleep(2)
+    # sleep(2)
     timeline_id = _get_id_by_url(url=timeline_url)
     if timeline_id is None:
         return make_response(
-            "url '{url}' does not exists!".format(url=timeline_url), 404
+            "URL '{url}' does not exists!".format(url=timeline_url), 404
         )
 
     get_timeline_query = """
@@ -88,7 +166,12 @@ def get_timeline(timeline_url):
     results = query(
         db_file=DB_PATH, query_string=get_timeline_query, args=[timeline_id]
     )
-    return {"events": results}
+    if results is None:
+        return make_response(
+            "Query Error!", 500
+        )
+    else:
+        return {"events": results}
 
 
 def add_event(timeline_url, new_event):
@@ -116,7 +199,7 @@ def add_event(timeline_url, new_event):
     timeline_id = _get_id_by_url(url=timeline_url)
     if timeline_id is None:
         return make_response(
-            "url '{url}' does not exists!".format(url=timeline_url), 201
+            "URL '{url}' does not exists!".format(url=timeline_url), 201
         )
     event_id = str(uuid.uuid4())
 
@@ -177,7 +260,7 @@ def create_timeline(new_timeline):
     create_user = new_timeline.get("create_user", None)
     if _is_url_exists(url):
         return make_response(
-            "Requested url: {url} already exists!".format(url=url), 201
+            "Requested URL: {url} already exists!".format(url=url), 201
         )
     elif not _check_allowed_chars(url, ALLOWED_CHARS):
         return make_response(

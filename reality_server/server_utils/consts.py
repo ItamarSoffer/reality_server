@@ -51,3 +51,8 @@ NUMS = [str(i) for i in range(0, 10)]
 ALLOWED_CHARS = SMALL_ABC + CAPITAL_ABC + NUMS + ["_", "-", "(", ")"]
 
 DB_PATH = r"C:\Scripts\Reality\server\sqlite_db\timeline.db"
+
+SYSTEM_NAME = "NZT"
+
+XLSX_FOLDER = r"C:\Scripts\Reality\xlsx_tmp"
+

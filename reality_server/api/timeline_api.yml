@@ -174,5 +174,21 @@ paths:
         201:
           description: Successfully created new event
 
+  //timeline/{timeline_url}/get_xlsx:
+      get:
+        operationId: reality_server.api.get_timeline_xlsx_file
+        tags:
+          - Timeline
+        summary: returns timeline data in table
+        description: Queries the db and return xlsx file of the data of the timeline.
+        parameters:
+          - name: timeline_url
+            in: path
+            description: the address of the timeline
+            type: string
+            required: True
+        responses:
+          200:
+            description: returned file successfully.
 
 
