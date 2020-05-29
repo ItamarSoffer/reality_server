@@ -60,10 +60,10 @@ def insert(db_file, table, columns, data, keep_open=False):
 
 # maybe change to 2 functions: one returns data and and headers and one changes to dicts.
 # change to context_manager
-def query(db_file, query_string, args=[], keep_open=False):
+def query_to_json(db_file, query_string, args=[], keep_open=False):
     """
     query the data from the db.
-    returns a list of dicts.
+    returns a list of dicts- each result is a json.
     :param db_file:
     :param query_string:
     :param args:
