@@ -1,8 +1,10 @@
 import sqlite3
+import pandas as pd
 
 # ##############################################
 # #########        DB FUNCTIONS        #########
 # ##############################################
+
 
 # change to context manager.
 def create_connection(db_file):
@@ -57,6 +59,7 @@ def insert(db_file, table, columns, data, keep_open=False):
 
 
 # maybe change to 2 functions: one returns data and and headers and one changes to dicts.
+# change to context_manager
 def query(db_file, query_string, args=[], keep_open=False):
     """
     query the data from the db.
@@ -67,6 +70,7 @@ def query(db_file, query_string, args=[], keep_open=False):
     :param keep_open: dont close the connection to db.
     :return:
     """
+    results = None
     connection = create_connection(db_file)
     try:
         c = connection.cursor()
@@ -79,9 +83,37 @@ def query(db_file, query_string, args=[], keep_open=False):
             for i in range(len(headers)):
                 dict_record[headers[i]] = record[i]
             results.append(dict_record)
-        return results
     except Exception as e:
         print(e)
     finally:
         if not keep_open:
             connection.close()
+    return results
+
+
+def query_to_df(db_file, query_string, args=[], keep_open=False):
+    """
+    Queries the db and returns the results as dataframe
+    :param db_file:
+    :param query_string:
+    :param args:
+    :param keep_open:
+    :return:
+    """
+    if type(args) == str:
+        args = [args]
+    table_results = None
+    connection = create_connection(db_file)
+    try:
+        c = connection.cursor()
+        c.execute(query_string, args)
+        headers = [description[0] for description in c.description]
+        raw_results = c.fetchall()
+        table_results = pd.DataFrame(columns=headers, data=raw_results)
+    except Exception as e:
+        print(e)
+    finally:
+        if not keep_open:
+            connection.close()
+    return table_results
+
