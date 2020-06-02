@@ -130,3 +130,7 @@ dev
 cookies.txt
 pipe
 cli-pipe
+
+
+#more
+*.db

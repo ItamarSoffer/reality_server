@@ -6,7 +6,7 @@ requirements = [
     "swagger-ui-bundle",
     "flask",
     "uuid",
-    "flask_cors"
+    "flask_cors",
 ]
 
 setuptools.setup(

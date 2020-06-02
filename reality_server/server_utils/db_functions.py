@@ -116,4 +116,3 @@ def query_to_df(db_file, query_string, args=[], keep_open=False):
         if not keep_open:
             connection.close()
     return table_results
-

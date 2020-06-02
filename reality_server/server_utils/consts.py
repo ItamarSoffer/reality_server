@@ -16,7 +16,7 @@ TABLES_COLUMNS = {
         "background_color",
         "frame_color",
         "icon_color",
-        "icon"
+        "icon",
     ],
     "USERS": ["username", "password"],
     "EVENTS_2": [
@@ -30,7 +30,7 @@ TABLES_COLUMNS = {
         "icon",
         "insertion_time",
         "create_user",
-    ]
+    ],
 }
 
 
@@ -39,7 +39,7 @@ TABLES_NAMES = {
     "EVENTS": "events",
     "EVENTS_DESIGN": "events_design",
     "USERS": "users",
-    "EVENTS_2": 'events_2'
+    "EVENTS_2": "events_2",
 }
 
 RESERVED_TIMELINE_NAMES = ["add", "delete", "del", ".", "?", "/"]
@@ -55,4 +55,3 @@ DB_PATH = r"C:\Scripts\Reality\server\sqlite_db\timeline.db"
 SYSTEM_NAME = "NZT"
 
 XLSX_FOLDER = r"C:\Scripts\Reality\xlsx_tmp"
-

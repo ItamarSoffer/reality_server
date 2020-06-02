@@ -14,7 +14,7 @@ basePath: /api
 paths:
   /login:
     get:
-      operationId: reality_server.api.login
+      operationId: reality_server.api.users_functions.login
       tags:
         - Timeline
       summary: check if user can login to system
@@ -36,7 +36,7 @@ paths:
 
   /get_all_names:
     get:
-      operationId: reality_server.api.get_all_names
+      operationId: reality_server.api.gets.get_all_timelines
       tags:
         - Timeline
       summary: get all the data for the cards
@@ -67,7 +67,7 @@ paths:
 
   /create_timeline:
     post:
-      operationId: reality_server.api.create_timeline
+      operationId: reality_server.api.posts.create_timeline
       tags:
         - Timeline
       summary: creates a new timeline and addss it to db
@@ -99,7 +99,7 @@ paths:
 
   /timeline/{timeline_url}:
     get:
-      operationId: reality_server.api.get_timeline
+      operationId: reality_server.api.gets.get_timeline
       tags:
         - Timeline
       summary: get all timeline events
@@ -118,10 +118,9 @@ paths:
               events:
                 type: array
 
-
   /timeline/{timeline_url}/add:
     post:
-      operationId: reality_server.api.add_event
+      operationId: reality_server.api.posts.add_event
       tags:
         - Timeline
       summary: Add new event to timeline
@@ -176,7 +175,7 @@ paths:
 
   /timeline/{timeline_url}/get_xlsx:
       get:
-        operationId: reality_server.api.get_timeline_xlsx_file
+        operationId: reality_server.api.gets.get_timeline_xlsx_file
         tags:
           - Timeline
         summary: returns timeline data in xlsx table
@@ -191,10 +190,9 @@ paths:
           200:
             description: returned file successfully.
 
-
   /timeline/{timeline_url}/basic_data:
     get:
-      operationId: reality_server.api.get_timeline_basic_data
+      operationId: reality_server.api.gets.get_timeline_basic_data
       tags:
         - Timeline
       summary: returns timeline base data
