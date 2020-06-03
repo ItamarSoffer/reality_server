@@ -31,6 +31,7 @@ TABLES_COLUMNS = {
         "insertion_time",
         "create_user",
     ],
+    "CONNECTIONS": ["user", "connection_time"]
 }
 
 
@@ -40,6 +41,7 @@ TABLES_NAMES = {
     "EVENTS_DESIGN": "events_design",
     "USERS": "users",
     "EVENTS_2": "events_2",
+    "CONNECTIONS": "connections"
 }
 
 RESERVED_TIMELINE_NAMES = ["add", "delete", "del", ".", "?", "/"]

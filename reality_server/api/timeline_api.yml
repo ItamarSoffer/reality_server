@@ -209,22 +209,3 @@ paths:
 
 
 
-  /timeline/{timeline_url}/basic_data:
-    get:
-      operationId: reality_server.api.get_timeline_basic_data
-      tags:
-        - Timeline
-      summary: returns timeline base data
-      description: returns the basic timeline data, that is inserted in the create page.
-      parameters:
-        - name: timeline_url
-          in: path
-          description: the address of the timeline
-          type: string
-          required: True
-      responses:
-        200:
-          description: returned file successfully.
-
-
-

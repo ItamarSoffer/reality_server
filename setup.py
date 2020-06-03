@@ -7,6 +7,8 @@ requirements = [
     "flask",
     "uuid",
     "flask_cors",
+    'pandas',
+
 ]
 
 setuptools.setup(

@@ -1,5 +1,14 @@
 from flask import make_response
 from .__main__ import APP_DB
+from ..server_utils.consts import (
+    TABLES_COLUMNS,
+    TABLES_NAMES,
+    RESERVED_TIMELINE_NAMES,
+    ALLOWED_CHARS,
+
+)
+from ..server_utils.time_functions import get_timestamp
+
 
 
 def login(username, password):
@@ -23,4 +32,8 @@ def login(username, password):
             "{user} has no permissions or wrong password".format(user=username), 201
         )
     else:
+        APP_DB.insert(
+            table=TABLES_NAMES["CONNECTIONS"],
+            columns=TABLES_COLUMNS["CONNECTIONS"],
+            data=[username, get_timestamp()])
         return make_response("{user} logged in successfully".format(user=username), 200)
