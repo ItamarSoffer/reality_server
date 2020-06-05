@@ -8,8 +8,8 @@ from ..server_utils.consts import (
     TABLES_NAMES,
     RESERVED_TIMELINE_NAMES,
     ALLOWED_CHARS,
-
 )
+from .users_functions import _add_permissions
 
 
 def create_timeline(new_timeline):
@@ -43,6 +43,9 @@ def create_timeline(new_timeline):
         columns=TABLES_COLUMNS["TIMELINE_IDS"],
         data=[name, timeline_id, url, create_time, create_user],
     )
+    _add_permissions(timeline_url=url,
+                     username=create_user,
+                     role="owner")
     return make_response(f"new Timeline '{name}' created!", 200)
 
 

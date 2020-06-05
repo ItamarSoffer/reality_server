@@ -20,26 +20,3 @@ from time import sleep
 # ##################################################
 
 
-def get_all_names(num=None):
-    """
-    returns all the data from the timeline_ids table, for the main cards view.
-    :return: 
-    """
-
-    timelines_query = """
-    SELECT *
-      FROM timeline_ids
-      ORDER BY create_time DESC
-    """
-    if num is None:
-        results = query(DB_PATH, timelines_query)
-    else:
-        timelines_query += ' LIMIT ?'
-        results = query(DB_PATH, timelines_query, [num])
-    if results is None:
-        return make_response(
-            "Query Error!", 500
-        )
-    else:
-        return results
-

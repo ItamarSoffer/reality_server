@@ -207,5 +207,27 @@ paths:
         200:
           description: returned file successfully.
 
+  /timeline/{timeline_url}/permissions:
+    get:
+      operationId: reality_server.api.users_functions.check_permissions
+      tags:
+        - Timeline
+      summary: checks user permissions
+      description: returns the user role.
+      parameters:
+        - name: timeline_url
+          in: path
+          description: timeline url
+          type: string
+          required: True
+        - name: username
+          in: query
+          type: string
+          description: user name
+          required: true
+      responses:
+        200:
+          description: User has some permissions.
+
 
 
