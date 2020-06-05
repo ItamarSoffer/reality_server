@@ -229,5 +229,30 @@ paths:
         200:
           description: User has some permissions.
 
+  /timeline/del_event:
+    get:
+      operationId: reality_server.api.deletes.delete_event
+      tags:
+        - Timeline
+        - Deletes
+      summary: Deletes event.
+      description: Deletes event if user has permissions
+      parameters:
+        - name: username
+          in: query
+          description: timeline url
+          type: string
+          required: True
+        - name: event_id
+          in: query
+          type: string
+          description: event ID
+          required: true
+      responses:
+        200:
+          description: Event has been deleted.
+
+
+
 
 

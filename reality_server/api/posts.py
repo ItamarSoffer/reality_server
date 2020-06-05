@@ -86,7 +86,7 @@ def add_event(timeline_url, new_event):
 def _add_event_data(timeline_id, event_id, new_event):
     """
     gets the timeline_id, event_id and the new event data.
-    inserts the data of the new event to EVENTS_2 table
+    inserts the data of the new event to EVENTS table
     :param timeline_id:
     :param event_id:
     :param new_event:
@@ -102,8 +102,8 @@ def _add_event_data(timeline_id, event_id, new_event):
     create_user = new_event.get("user")
 
     APP_DB.insert(
-        table=TABLES_NAMES["EVENTS_2"],
-        columns=TABLES_COLUMNS["EVENTS_2"],
+        table=TABLES_NAMES["EVENTS"],
+        columns=TABLES_COLUMNS["EVENTS"],
         data=[
             timeline_id,
             event_id,

@@ -26,7 +26,6 @@ def login(username, password):
     where username = ? AND password = ? """
 
     results = APP_DB.query_to_json(users_query, [username, password])
-    print(results)
     if results is None or len(results) == 0:
         return make_response(
             "{user} has no permissions or wrong password".format(user=username), 201
@@ -41,7 +40,7 @@ def login(username, password):
 
 def _add_permissions(timeline_url, username, role):
     timeline_id = _get_id_by_url(timeline_url)
-    APP_DB.insert(table=TABLES_COLUMNS["PERMISSIONS"],
+    APP_DB.insert(table=TABLES_NAMES["PERMISSIONS"],
                   columns=TABLES_COLUMNS["PERMISSIONS"],
                   data=[
                       timeline_id,

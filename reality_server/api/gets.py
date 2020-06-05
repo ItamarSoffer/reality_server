@@ -61,7 +61,7 @@ def get_timeline(timeline_url):
 
     get_timeline_query = """
     SELECT *
-      FROM events_2
+      FROM events
 	 WHERE timeline_id = ?
      ORDER BY event_time DESC """
     results = APP_DB.query_to_json(query_string=get_timeline_query, args=[timeline_id])
@@ -98,7 +98,7 @@ def _create_timeline_xlsx(timeline_url):
 
     events_query = """
     SELECT name, header, text, link, event_time, icon, insertion_time, e.create_user
-FROM events_2 e
+FROM events e
  INNER JOIN timeline_ids t
  ON (e.timeline_id = t.id)
  WHERE url = ?"""

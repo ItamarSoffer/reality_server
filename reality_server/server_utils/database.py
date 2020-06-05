@@ -21,11 +21,14 @@ class Database(object):
 
         return conn
 
-    def run(self, query, keep_open=False):
+    def run(self, query, args=[], keep_open=False):
+        if type(args) == str:
+            args = [args]
         connection = self._create_connection()
         try:
             c = connection.cursor()
-            c.execute(query)
+            c.execute(query, args)
+            connection.commit()
         except Exception as e:
             print(e)
         finally:
@@ -66,24 +69,13 @@ class Database(object):
         :param keep_open: dont close the connection to db.
         :return:
         """
-        results = None
-        connection = self._create_connection()
-        try:
-            c = connection.cursor()
-            c.execute(query_string, args)
-            headers = [description[0] for description in c.description]
-            raw_results = c.fetchall()
-            results = []
-            for record in raw_results:
-                dict_record = {}
-                for i in range(len(headers)):
-                    dict_record[headers[i]] = record[i]
-                results.append(dict_record)
-        except Exception as e:
-            print(e)
-        finally:
-            if not keep_open:
-                connection.close()
+        headers, raw_results = self.query(query_string, args, keep_open)
+        results = []
+        for record in raw_results:
+            dict_record = {}
+            for i in range(len(headers)):
+                dict_record[headers[i]] = record[i]
+            results.append(dict_record)
         return results
 
     def query_to_df(self, query_string, args=[], keep_open=False):
@@ -94,19 +86,34 @@ class Database(object):
         :param keep_open:
         :return:
         """
+        headers, raw_results = self.query(query_string, args, keep_open)
+        return pd.DataFrame(columns=headers, data=raw_results)
+
+    def query(self, query_string, args=[], keep_open=False, return_headers=True):
+        """
+        Queries the db and returns the results as dataframe
+        :param query_string:
+        :param args:
+        :param keep_open:
+        :return:
+        """
+        headers, raw_results = [], []
         if type(args) == str:
             args = [args]
-        table_results = None
         connection = self._create_connection()
         try:
             c = connection.cursor()
             c.execute(query_string, args)
             headers = [description[0] for description in c.description]
             raw_results = c.fetchall()
-            table_results = pd.DataFrame(columns=headers, data=raw_results)
         except Exception as e:
             print(e)
         finally:
             if not keep_open:
                 connection.close()
-        return table_results
+        if return_headers:
+            return headers, raw_results
+        else:
+            return raw_results
+
+
