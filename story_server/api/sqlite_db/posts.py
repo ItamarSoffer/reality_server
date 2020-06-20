@@ -1,15 +1,15 @@
 import uuid
 from flask import make_response
-from .__main__ import APP_DB
-from .gets import _get_id_by_url, _is_url_exists
-from ..server_utils.time_functions import get_timestamp
-from ..server_utils.consts import (
+from story_server.api.__main__ import APP_DB
+from story_server.api.sqlite_db.gets import _get_id_by_url, _is_url_exists
+from story_server.server_utils.time_functions import get_timestamp
+from story_server.server_utils.consts import (
     TABLES_COLUMNS,
     TABLES_NAMES,
     RESERVED_TIMELINE_NAMES,
     ALLOWED_CHARS,
 )
-from .users_functions import _add_permissions
+from story_server.api.users_functions import _add_permissions
 
 
 def create_timeline(new_timeline):
@@ -46,7 +46,7 @@ def create_timeline(new_timeline):
     _add_permissions(timeline_url=url,
                      username=create_user,
                      role="owner")
-    return make_response(f"new Timeline '{name}' created!", 200)
+    return make_response("new Timeline '{name}' created!".format(name=name), 200)
 
 
 def add_event(timeline_url, new_event):
@@ -80,7 +80,7 @@ def add_event(timeline_url, new_event):
 
     _add_event_data(timeline_id=timeline_id, event_id=event_id, new_event=new_event)
 
-    return make_response(f"added new record to '{timeline_url}'!", 200)
+    return make_response("added new record to '{timeline_url}'!".format(timeline_url=timeline_url), 200)
 
 
 def _add_event_data(timeline_id, event_id, new_event):
@@ -95,7 +95,8 @@ def _add_event_data(timeline_id, event_id, new_event):
     header = new_event.get("header")
     text = new_event.get("text")
     link = new_event.get("link", None)
-    event_time = f'{new_event.get("date")} {new_event.get("hour", "")}'
+    event_time = '{date} {hour}'.format(date=new_event.get("date"),
+                                        hour=new_event.get("hour", ""))
     frame_color = new_event.get("frame_color", "rgb(33, 150, 243)")
     icon = new_event.get("icon", "")
     insertion_time = get_timestamp()

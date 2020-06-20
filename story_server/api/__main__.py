@@ -3,10 +3,15 @@ from flask import make_response, send_file
 from ..server_utils.consts import (
     DB_PATH,
 )
-from ..server_utils import Database
 
-APP_DB = Database(db_file=DB_PATH)
+MODE = "SQLITE"
 
+if MODE == "SQLITE":
+    from ..server_utils import Database
+    APP_DB = Database(db_file=DB_PATH)
+
+if MODE == "MSSQL":
+    pass
 
 from time import sleep
 

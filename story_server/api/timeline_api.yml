@@ -14,7 +14,7 @@ basePath: /api
 paths:
   /login:
     get:
-      operationId: reality_server.api.users_functions.login
+      operationId: story_server.api.users_functions.login
       tags:
         - Timeline
       summary: check if user can login to system
@@ -36,7 +36,7 @@ paths:
 
   /get_all_names:
     get:
-      operationId: reality_server.api.gets.get_all_timelines
+      operationId: story_server.api.gets.get_all_timelines
       tags:
         - Timeline
       summary: get all the data for the cards
@@ -67,7 +67,7 @@ paths:
 
   /create_timeline:
     post:
-      operationId: reality_server.api.posts.create_timeline
+      operationId: story_server.api.posts.create_timeline
       tags:
         - Timeline
       summary: creates a new timeline and addss it to db
@@ -99,7 +99,7 @@ paths:
 
   /timeline/{timeline_url}:
     get:
-      operationId: reality_server.api.gets.get_timeline
+      operationId: story_server.api.gets.get_timeline
       tags:
         - Timeline
       summary: get all timeline events
@@ -120,7 +120,7 @@ paths:
 
   /timeline/{timeline_url}/add:
     post:
-      operationId: reality_server.api.posts.add_event
+      operationId: story_server.api.posts.add_event
       tags:
         - Timeline
       summary: Add new event to timeline
@@ -175,7 +175,7 @@ paths:
 
   /timeline/{timeline_url}/get_xlsx:
       get:
-        operationId: reality_server.api.gets.get_timeline_xlsx_file
+        operationId: story_server.api.gets.get_timeline_xlsx_file
         tags:
           - Timeline
         summary: returns timeline data in xlsx table
@@ -192,7 +192,7 @@ paths:
 
   /timeline/{timeline_url}/basic_data:
     get:
-      operationId: reality_server.api.gets.get_timeline_basic_data
+      operationId: story_server.api.gets.get_timeline_basic_data
       tags:
         - Timeline
       summary: returns timeline base data
@@ -207,11 +207,12 @@ paths:
         200:
           description: returned file successfully.
 
-  /timeline/{timeline_url}/permissions:
+  /timeline/{timeline_url}/check_permissions:
     get:
-      operationId: reality_server.api.users_functions.check_permissions
+      operationId: story_server.api.users_functions.check_permissions
       tags:
         - Timeline
+        - Permissions
       summary: checks user permissions
       description: returns the user role.
       parameters:
@@ -229,18 +230,59 @@ paths:
         200:
           description: User has some permissions.
 
+  /timeline/{timeline_url}/set_permissions/:
+    post:
+      operationId: story_server.api.users_functions.set_permissions
+      tags:
+        - Timeline
+        - Permissions
+      summary: sets permissions for user
+      description: tries to set permissions to user, if the send user can preform the action.
+      parameters:
+        - name: timeline_url
+          in: path
+          description: timeline url
+          type: string
+          required: True
+        - name: permissions_data
+          in: body
+          description: permissions_data
+          required: True
+          schema:
+            type: object
+            properties:
+              username:
+                type: string
+                description: user name
+              role:
+                type: string
+                description: role
+              adding_user:
+                type: string
+                description: the user that sent the action
+            required:
+              - username
+              - role
+              - adding_user
+
+      responses:
+        200:
+          description: permissions were added.
+
+
+
   /timeline/del_event:
     get:
-      operationId: reality_server.api.deletes.delete_event
+      operationId: story_server.api.deletes.delete_event
       tags:
         - Timeline
         - Deletes
-      summary: Deletes event.
+      summary: Deletes event
       description: Deletes event if user has permissions
       parameters:
         - name: username
           in: query
-          description: timeline url
+          description: username
           type: string
           required: True
         - name: event_id
@@ -251,6 +293,30 @@ paths:
       responses:
         200:
           description: Event has been deleted.
+
+  /timeline/del_timeline:
+    get:
+      operationId: story_server.api.deletes.delete_timeline
+      tags:
+        - Timeline
+        - Deletes
+      summary: Deletes Timeline
+      description: Deletes timeline and all its events if user has permissions
+      parameters:
+        - name: username
+          in: query
+          description: user name
+          type: string
+          required: True
+        - name: timeline_id
+          in: query
+          type: string
+          description: Timeline ID
+          required: true
+      responses:
+        200:
+          description: Timeline has been deleted.
+
 
 
 

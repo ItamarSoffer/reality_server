@@ -1,0 +1,5 @@
+permissions values:
+owner- only the creator. can add permissions.
+read- only read permissions
+write- can edit and add events.
+none- cant see. this will be if the someone removed the permissions. 

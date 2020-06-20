@@ -51,8 +51,8 @@ class Database(object):
             c.execute(query, data)
             connection.commit()
         except Exception as e:
-            print(f"Tried to run:\n {query}")
-            print(f"Error: {e}")
+            print("Tried to run:\n {query}".format(query=query))
+            print("Error: {e}".format(e=e))
         finally:
             if not keep_open:
                 connection.close()

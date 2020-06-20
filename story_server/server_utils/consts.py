@@ -1,3 +1,4 @@
+import sys
 TABLES_COLUMNS = {
     "TIMELINE_IDS": ["name", "id", "url", "create_time", "create_user"],
     "EVENTS_DESIGN": [
@@ -45,6 +46,8 @@ ALLOWED_CHARS = SMALL_ABC + CAPITAL_ABC + NUMS + ["_", "-", "(", ")"]
 
 DB_PATH = r"C:\Scripts\Reality\server\sqlite_db\timeline.db"
 
-SYSTEM_NAME = "NZT"
-
-XLSX_FOLDER = r"C:\Scripts\Reality\xlsx_tmp"
+SYSTEM_NAME = "STORY"
+if sys.platform.startswith("win"):
+    XLSX_FOLDER = r"C:\Scripts\Reality\xlsx_tmp"
+else:
+    XLSX_FOLDER = r'/mnt/data/xlsx_tmp'

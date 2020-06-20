@@ -2,8 +2,8 @@ from flask import make_response, send_file
 import os
 from datetime import datetime
 import pandas as pd
-from .__main__ import APP_DB
-from ..server_utils.consts import (
+from story_server.api.__main__ import APP_DB
+from story_server.server_utils.consts import (
     SYSTEM_NAME,
     XLSX_FOLDER,
 )

@@ -12,24 +12,36 @@ from .users_functions import check_permissions
 
 
 def delete_timeline(timeline_id, username):
-    pass
-
-
-def delete_event(event_id, username):
-    role = _check_permission_by_event(event_id, username)
-    print(role)
-
+    role = _check_permission_by_timeline_id(timeline_id, username)
     if not role:
-        print(1)
         return make_response("User has no permissions or wrong event ID", 201)
 
     role = role[0][0]
     if role == 'read':
-        print(2)
         return make_response("User doesnt have permissions to delete events!", 201)
     elif role in ['owner', 'write']:
-        print(3)
-        print(3)
+        delete_events_query = """
+            DELETE
+            FROM events
+            WHERE timeline_id = ?"""
+        APP_DB.run(delete_events_query, [timeline_id])
+        delete_timeline_query = """
+            DELETE
+            FROM timeline_ids
+            WHERE id = ?"""
+        APP_DB.run(delete_timeline_query, [timeline_id])
+        return make_response("Timeline and its events deleted successfully", 200)
+
+
+def delete_event(event_id, username):
+    role = _check_permission_by_event(event_id, username)
+    if not role:
+        return make_response("User has no permissions or wrong event ID", 201)
+
+    role = role[0][0]
+    if role == 'read':
+        return make_response("User doesnt have permissions to delete events!", 201)
+    elif role in ['owner', 'write']:
         delete_query = """
         DELETE
         FROM events
@@ -48,9 +60,9 @@ def _check_permission_by_event(event_id, username):
     return APP_DB.query(query, [username, event_id], return_headers=False)
 
 
-def _get_timeline_by_event(event_id):
-    query = """SELECT timeline_id
-    from events
-    WHERE event_id = ?
-    """
-    return APP_DB.query(query, [event_id])[0]
+def _check_permission_by_timeline_id(event_id, username):
+    query = """
+      SELECT role
+    FROM permissions p  
+     WHERE username =? and timeline_id = ?"""
+    return APP_DB.query(query, [username, event_id], return_headers=False)
