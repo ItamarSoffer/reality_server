@@ -44,10 +44,10 @@ NUMS = [str(i) for i in range(0, 10)]
 
 ALLOWED_CHARS = SMALL_ABC + CAPITAL_ABC + NUMS + ["_", "-", "(", ")"]
 
-DB_PATH = r"C:\Scripts\Reality\server\sqlite_db\timeline.db"
+DB_PATH = r"C:\Scripts\Story\server\sqlite_db\timeline.db"
 
 SYSTEM_NAME = "STORY"
 if sys.platform.startswith("win"):
-    XLSX_FOLDER = r"C:\Scripts\Reality\xlsx_tmp"
+    XLSX_FOLDER = r"C:\Scripts\Story\xlsx_tmp"
 else:
     XLSX_FOLDER = r'/mnt/data/xlsx_tmp'

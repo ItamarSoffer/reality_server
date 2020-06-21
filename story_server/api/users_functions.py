@@ -65,7 +65,7 @@ def _check_permissions(timeline_url, username):
     permissions_query = """
     SELECT username, role
       FROM permissions
-      WHERE timeline_url = ? AND username = ? """
+      WHERE timeline_url = ? AND (username = ? or username = 'public') """
     results = APP_DB.query_to_json(permissions_query, [timeline_url, username])
     if not results:
         return False
@@ -119,7 +119,7 @@ def set_permissions(timeline_url, permissions_data):
     # check username has permissions to system.
     if role not in ["read", "write", "owner", "none"]:
         return make_response("non valid role type!", 201)
-    elif not _user_has_story_permissions(username):
+    elif not (_user_has_story_permissions(username) or username == 'public'):
         return make_response("User '{user}' has no permissions to Story!".format(user=username), 201)
     elif not _user_has_story_permissions(adding_user):
         return make_response("User '{user}' has no permissions to Story!".format(user=adding_user), 201)
