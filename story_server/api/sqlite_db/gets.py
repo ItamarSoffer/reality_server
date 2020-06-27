@@ -31,6 +31,30 @@ def get_all_timelines(num=None):
         return results
 
 
+def get_timelines_by_user(username, num=None):
+    """
+    returns all the timelines a specific user can access
+    :return:
+    """
+
+    timelines_query = """
+SELECT id, url, username, role , t.description, t.name, t.create_user
+  FROM permissions p
+  INNER JOIN  timeline_ids t
+  ON t.id = p.timeline_id
+  WHERE username = ? and role != 'none'
+    """
+    if num is None:
+        results = APP_DB.query_to_json(timelines_query, [username])
+    else:
+        timelines_query += " LIMIT ?"
+        results = APP_DB.query_to_json(timelines_query, [num])
+    if results is None:
+        return make_response("Query Error!", 500)
+    else:
+        return results
+
+
 def get_timeline_basic_data(timeline_url):
     """
     returns the basic timeline data.

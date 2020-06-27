@@ -62,15 +62,30 @@ def _check_permissions(timeline_url, username):
     :param username:
     :return:
     """
-    permissions_query = """
+    user_permissions_query = """
     SELECT username, role
       FROM permissions
-      WHERE timeline_url = ? AND (username = ? or username = 'public') """
-    results = APP_DB.query_to_json(permissions_query, [timeline_url, username])
-    if not results:
-        return False
+      WHERE timeline_url = ? AND username = ? AND role != 'none' """
+
+    public_permissions_query = """
+    SELECT username, role
+      FROM permissions
+      WHERE timeline_url = ? AND username = 'public' AND role != 'none' """
+    user_results = APP_DB.query_to_json(user_permissions_query, [timeline_url, username])
+    public_results = APP_DB.query_to_json(public_permissions_query, [timeline_url, username])
+    if not user_results:
+        if not public_results:
+            return False
+        else:
+            return public_results[0]
     else:
-        return results[0]
+        if user_results[0]['role'] == 'read':
+            if public_results and public_results[0]['role'] == 'write':
+                return public_results[0]
+            else:
+                return user_results[0]
+        else:
+            return user_results[0]
 
 
 def check_permissions(timeline_url, username):
@@ -134,4 +149,15 @@ def set_permissions(timeline_url, permissions_data):
         return make_response("Only owner can change permissions.", 201)
 
 
-
+def permitted_users(timeline_url):
+    """
+    returns all users that has permissions, and roles
+    :param timeline_url:
+    :return:
+    """
+    query = """
+    SELECT username, role
+    FROM permissions
+    WHERE timeline_url = ? and role != 'none'
+    """
+    return APP_DB.query_to_json(query, args=[timeline_url])
