@@ -49,7 +49,7 @@ paths:
           required: false
       responses:
         200:
-          description: Successfully read people list operation
+          description: fetched all timelines data.
           schema:
             type: array
             items:
@@ -64,6 +64,29 @@ paths:
                   type: string
                 create_user:
                   type: string
+
+  /get_timelines_by_user:
+    get:
+      operationId: story_server.api.gets.get_timelines_by_user
+      tags:
+        - Timeline
+        - By User
+      summary: timeslines by user permissions
+      description: gets all the timelines a user has permissions to.
+      parameters:
+        - name: username
+          in: query
+          type: string
+          description: username to get data to
+          required: true
+        - name: num
+          in: query
+          type: integer
+          description: amount of timelines to return.
+          required: false
+      responses:
+        200:
+          description: Successfully read people list operation
 
   /create_timeline:
     post:
@@ -268,6 +291,24 @@ paths:
       responses:
         200:
           description: permissions were added.
+
+  /timeline/{timeline_url}/permitted_users:
+    get:
+      operationId: story_server.api.users_functions.permitted_users
+      tags:
+        - Timeline
+        - Permissions
+      summary: returns all users permitted per timeline
+      description: returns all users permitted per timeline
+      parameters:
+        - name: timeline_url
+          in: path
+          description: timeline url
+          type: string
+          required: True
+      responses:
+        200:
+          description: Successfully queried all users per story.
 
 
 
