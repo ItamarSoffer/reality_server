@@ -1,4 +1,7 @@
 import sys
+import os
+
+SECRET_KEY = os.urandom(24)
 TABLES_COLUMNS = {
     "TIMELINE_IDS": ["name", "id", "url", "create_time", "create_user"],
     "EVENTS_DESIGN": [

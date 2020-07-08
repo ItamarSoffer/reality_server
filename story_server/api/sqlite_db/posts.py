@@ -9,10 +9,12 @@ from story_server.server_utils.consts import (
     RESERVED_TIMELINE_NAMES,
     ALLOWED_CHARS,
 )
-from story_server.api.users_functions import _add_permissions
+from .users_functions import _add_permissions
+from ..jwt_functions import check_jwt
 
 
-def create_timeline(new_timeline):
+@check_jwt
+def create_timeline(new_timeline, **kargs):
     """
     creates a new timeline.
     makes sure that the url is not already taken
@@ -49,7 +51,8 @@ def create_timeline(new_timeline):
     return make_response("new Timeline '{name}' created!".format(name=name), 200)
 
 
-def add_event(timeline_url, new_event):
+@check_jwt
+def add_event(timeline_url, new_event, **kargs):
     """
     adds new event to timeline.
     :param timeline_url: the url of the timeline to add to.

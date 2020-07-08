@@ -8,8 +8,11 @@ from story_server.server_utils.consts import (
     XLSX_FOLDER,
 )
 
+from ..jwt_functions import check_jwt
 
-def get_all_timelines(num=None):
+
+@check_jwt
+def get_all_timelines(num=None, **kargs):
     """
     returns all the data from the timeline_ids table, for the main cards view.
     :return:
@@ -31,7 +34,8 @@ def get_all_timelines(num=None):
         return results
 
 
-def get_timelines_by_user(username, num=None):
+@check_jwt
+def get_timelines_by_user(username, num=None, **kargs):
     """
     returns all the timelines a specific user can access
     :return:
@@ -55,7 +59,8 @@ SELECT id, url, username, role , t.description, t.name, t.create_user
         return results
 
 
-def get_timeline_basic_data(timeline_url):
+@check_jwt
+def get_timeline_basic_data(timeline_url, **kargs):
     """
     returns the basic timeline data.
     :param timeline_url:
@@ -69,7 +74,8 @@ def get_timeline_basic_data(timeline_url):
     return results
 
 
-def get_timeline(timeline_url):
+@check_jwt
+def get_timeline(timeline_url, **kargs):
     """
     returns all the events data of a timeline
     each event data is a json.dumps
@@ -95,7 +101,8 @@ def get_timeline(timeline_url):
         return {"events": results}
 
 
-def get_timeline_xlsx_file(timeline_url):
+@check_jwt
+def get_timeline_xlsx_file(timeline_url, **kwargs):
     if not _is_url_exists(timeline_url):
         return make_response(
             "URL: {url} Does not exists!".format(url=timeline_url), 201

@@ -35,7 +35,7 @@ paths:
           description: user Successfully logged in
 
   /get_all_names:
-    get:
+    post:
       operationId: story_server.api.gets.get_all_timelines
       tags:
         - Timeline
@@ -47,6 +47,14 @@ paths:
           type: integer
           description: amount of timelines to return
           required: false
+        - name: jwt
+          in: body
+          description: the jwt token.
+          required: True
+          schema:
+            allOf:
+            - $ref: '#/definitions/JwtAuth'
+
       responses:
         200:
           description: fetched all timelines data.
@@ -66,7 +74,7 @@ paths:
                   type: string
 
   /get_timelines_by_user:
-    get:
+    post:
       operationId: story_server.api.gets.get_timelines_by_user
       tags:
         - Timeline
@@ -84,6 +92,13 @@ paths:
           type: integer
           description: amount of timelines to return.
           required: false
+        - name: jwt
+          in: body
+          description: the jwt token.
+          required: True
+          schema:
+            allOf:
+            - $ref: '#/definitions/JwtAuth'
       responses:
         200:
           description: Successfully read people list operation
@@ -101,27 +116,29 @@ paths:
           description: timeline to create
           required: True
           schema:
-            type: object
-            properties:
-              name:
-                type: string
-                description: the name of the timeline
-              url:
-                type: string
-                description: the url for the timeline
-              create_user:
-                type: string
-                description: the user who created the timeline
-              timeline_description:
-                type: string
-                description: timeline description
+            allOf:
+            - $ref: '#/definitions/JwtAuth'
+            - type: object
+              properties:
+                name:
+                  type: string
+                  description: the name of the timeline
+                url:
+                  type: string
+                  description: the url for the timeline
+                create_user:
+                  type: string
+                  description: the user who created the timeline
+                timeline_description:
+                  type: string
+                  description: timeline description
 
       responses:
         200:
           description: Successfully created new timeline
 
   /timeline/{timeline_url}:
-    get:
+    post:
       operationId: story_server.api.gets.get_timeline
       tags:
         - Timeline
@@ -133,6 +150,13 @@ paths:
           description: the address of the timeline
           type: string
           required: True
+        - name: jwt
+          in: body
+          description: the jwt token.
+          required: True
+          schema:
+            allOf:
+            - $ref: '#/definitions/JwtAuth'
       responses:
         200:
           description: Successfully read timeline events from db.
@@ -159,45 +183,47 @@ paths:
           description: new_event to create
           required: True
           schema:
-            type: object
-            properties:
-              header:
+            allOf:
+            - $ref: '#/definitions/JwtAuth'
+            - type: object
+              properties:
+                header:
+                  type: string
+                  description: main header of event.
+                text:
+                  type: string
+                  description: event text.
+                date:
+                  type: string
+                  description: the date the event accured.
+                hour:
+                  type: string
+                  description: the hour the event accured.
+                user:
+                  type: string
+                  description: the user who created the timeline.
+                link:
+                  type: string
+                  description: additional link for more data for the event.
+                frame_color:
+                  type: string
+                  description: color for icon and frame
+                icon:
+                  type: string
+                  description: the icon for the timeline
+              required:
+                - header
+                - date
+                - text
+                - user
+              additionalProperties:
                 type: string
-                description: main header of event.
-              text:
-                type: string
-                description: event text.
-              date:
-                type: string
-                description: the date the event accured.
-              hour:
-                type: string
-                description: the hour the event accured.
-              user:
-                type: string
-                description: the user who created the timeline.
-              link:
-                type: string
-                description: additional link for more data for the event.
-              frame_color:
-                type: string
-                description: color for icon and frame
-              icon:
-                type: string
-                description: the icon for the timeline
-            required:
-              - header
-              - date
-              - text
-              - user
-            additionalProperties:
-              type: string
       responses:
         201:
           description: Successfully created new event
 
   /timeline/{timeline_url}/get_xlsx:
-      get:
+      post:
         operationId: story_server.api.gets.get_timeline_xlsx_file
         tags:
           - Timeline
@@ -209,12 +235,19 @@ paths:
             description: the address of the timeline
             type: string
             required: True
+          - name: jwt
+            in: body
+            description: the jwt token.
+            required: True
+            schema:
+              allOf:
+                - $ref: '#/definitions/JwtAuth'
         responses:
           200:
             description: returned file successfully.
 
   /timeline/{timeline_url}/basic_data:
-    get:
+    post:
       operationId: story_server.api.gets.get_timeline_basic_data
       tags:
         - Timeline
@@ -226,12 +259,19 @@ paths:
           description: the address of the timeline
           type: string
           required: True
+        - name: jwt
+          in: body
+          description: the jwt token.
+          required: True
+          schema:
+            allOf:
+            - $ref: '#/definitions/JwtAuth'
       responses:
         200:
           description: returned file successfully.
 
   /timeline/{timeline_url}/check_permissions:
-    get:
+    post:
       operationId: story_server.api.users_functions.check_permissions
       tags:
         - Timeline
@@ -249,6 +289,13 @@ paths:
           type: string
           description: user name
           required: true
+        - name: jwt
+          in: body
+          description: the jwt token.
+          required: True
+          schema:
+            allOf:
+            - $ref: '#/definitions/JwtAuth'
       responses:
         200:
           description: User has some permissions.
@@ -272,28 +319,30 @@ paths:
           description: permissions_data
           required: True
           schema:
-            type: object
-            properties:
-              username:
-                type: string
-                description: user name
-              role:
-                type: string
-                description: role
-              adding_user:
-                type: string
-                description: the user that sent the action
-            required:
-              - username
-              - role
-              - adding_user
+            allOf:
+            - $ref: '#/definitions/JwtAuth'
+            - type: object
+              properties:
+                username:
+                  type: string
+                  description: user name
+                role:
+                  type: string
+                  description: role
+                adding_user:
+                  type: string
+                  description: the user that sent the action
+              required:
+                - username
+                - role
+                - adding_user
 
       responses:
         200:
           description: permissions were added.
 
   /timeline/{timeline_url}/permitted_users:
-    get:
+    post:
       operationId: story_server.api.users_functions.permitted_users
       tags:
         - Timeline
@@ -306,14 +355,19 @@ paths:
           description: timeline url
           type: string
           required: True
+        - name: jwt
+          in: body
+          description: the jwt token.
+          required: True
+          schema:
+            allOf:
+            - $ref: '#/definitions/JwtAuth'
       responses:
         200:
           description: Successfully queried all users per story.
 
-
-
   /timeline/del_event:
-    get:
+    post:
       operationId: story_server.api.deletes.delete_event
       tags:
         - Timeline
@@ -331,12 +385,19 @@ paths:
           type: string
           description: event ID
           required: true
+        - name: jwt
+          in: body
+          description: the jwt token.
+          required: True
+          schema:
+            allOf:
+            - $ref: '#/definitions/JwtAuth'
       responses:
         200:
           description: Event has been deleted.
 
   /timeline/del_timeline:
-    get:
+    post:
       operationId: story_server.api.deletes.delete_timeline
       tags:
         - Timeline
@@ -354,11 +415,72 @@ paths:
           type: string
           description: Timeline ID
           required: true
+        - name: jwt
+          in: body
+          description: the jwt token.
+          required: True
+          schema:
+            allOf:
+            - $ref: '#/definitions/JwtAuth'
       responses:
         200:
           description: Timeline has been deleted.
 
+  /check:
+    post:
+      operationId: story_server.api.jwt_functions.checker
+      tags:
+        - Check
+      summary: Add new event to timeline
+      description: adds the new event to timeline
+      parameters:
+        - name: new_event
+          in: body
+          description: new_event to create
+          required: True
+          schema:
+            allOf:
+            - type: object
+              properties:
+                header:
+                  type: string
+                  description: main header of event.
+              additionalProperties:
+                type: string
+            - $ref: '#/definitions/JwtAuth'
+      responses:
+        201:
+          description: Successfully check
 
+  /jwt_check:
+    post:
+      operationId: story_server.api.jwt_functions.basic_jwt_check
+      tags:
+        - JWT
+      summary: jwt token validation.
+      description: check that the user local JWT token is valid
+      parameters:
+        - name: jwt
+          in: body
+          description: the jwt token.
+          required: True
+          schema:
+            allOf:
+            - $ref: '#/definitions/JwtAuth'
+      responses:
+        200:
+          description: Successfully check
+        201:
+          description: jwt is not valid
+
+
+definitions:
+  JwtAuth:
+    type: object
+    properties:
+      jwt_token:
+        type: string
+        description: the icon for the timeline
 
 
 
