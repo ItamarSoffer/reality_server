@@ -24,6 +24,7 @@ def create_timeline(new_timeline, **kargs):
     name = new_timeline.get("name", None)
     url = new_timeline.get("url", None)
     create_user = new_timeline.get("create_user", None)
+    description = new_timeline.get("description", None)
     if _is_url_exists(url):
         return make_response(
             "Requested URL: {url} already exists!".format(url=url), 201
@@ -43,7 +44,7 @@ def create_timeline(new_timeline, **kargs):
     APP_DB.insert(
         table=TABLES_NAMES["TIMELINE_IDS"],
         columns=TABLES_COLUMNS["TIMELINE_IDS"],
-        data=[name, timeline_id, url, create_time, create_user],
+        data=[name, timeline_id, url, description, create_time, create_user],
     )
     _add_permissions(timeline_url=url,
                      username=create_user,
