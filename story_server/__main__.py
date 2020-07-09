@@ -3,8 +3,16 @@ from flask_cors import CORS
 import connexion
 import os
 
+UI = True
+
 # Create the application instance
-app = connexion.App(__name__, specification_dir="./")
+if UI:
+    app = connexion.App(__name__, specification_dir="./")
+else:
+    # Disable UI
+    options = {"swagger_ui": False}
+    app = connexion.FlaskApp(__name__, specification_dir="./", options=options)
+
 
 # Read the swagger.yml file to configure the endpoints
 my_dir = os.path.dirname(os.path.realpath(__file__))
@@ -12,6 +20,7 @@ config_path = os.path.join(my_dir, "api", "timeline_api.yml")
 
 CORS(app.app)
 app.add_api(config_path)
+
 # app.add_api('timeline_api.yml')
 # to open the swagger UI install: connexion[swagger-ui]
 
