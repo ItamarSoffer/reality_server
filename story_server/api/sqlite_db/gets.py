@@ -18,8 +18,16 @@ def get_all_timelines(num=None, **kargs):
     :return:
     """
     timelines_query = """
-    SELECT *
-      FROM timeline_ids
+    WITH event_counter AS 
+    (
+    SELECT timeline_id, count(*) as counter
+      FROM events
+     GROUP BY timeline_id
+      )
+      SELECT t.*, counter
+      FROM timeline_ids t
+      INNER JOIN event_counter e
+      ON t.id = e.timeline_id
       ORDER BY create_time DESC
     """
     if num is None:
@@ -41,13 +49,19 @@ def get_timelines_by_user(num=None, **kargs):
     """
     jwt_token = _search_in_sub_dicts(kargs, "jwt_token")
     username = decrypt_auth_token(jwt_token)
-    print(f"username: {username}")
-
     timelines_query = """
-SELECT id, url, username, role , t.description, t.name, t.create_user
+        WITH event_counter AS 
+    (
+    SELECT timeline_id, count(*) as counter
+      FROM events
+     GROUP BY timeline_id
+      )
+SELECT id, url, username, role , t.description, t.name, t.create_user, e.counter
   FROM permissions p
   INNER JOIN  timeline_ids t
   ON t.id = p.timeline_id
+  INNER JOIN event_counter e 
+  ON t.id = e.timeline_id
   WHERE username = ? and role != 'none'
     """
     if num is None:
