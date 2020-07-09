@@ -8,7 +8,7 @@ from story_server.server_utils.consts import (
     XLSX_FOLDER,
 )
 
-from ..jwt_functions import check_jwt
+from ..jwt_functions import check_jwt, _search_in_sub_dicts, decrypt_auth_token
 
 
 @check_jwt
@@ -17,7 +17,6 @@ def get_all_timelines(num=None, **kargs):
     returns all the data from the timeline_ids table, for the main cards view.
     :return:
     """
-
     timelines_query = """
     SELECT *
       FROM timeline_ids
@@ -40,6 +39,10 @@ def get_timelines_by_user(username, num=None, **kargs):
     returns all the timelines a specific user can access
     :return:
     """
+    # TODO:
+    jwt_token = _search_in_sub_dicts(kargs, "jwt_token")
+    username = decrypt_auth_token(jwt_token)
+    print(f"username: {username}")
 
     timelines_query = """
 SELECT id, url, username, role , t.description, t.name, t.create_user

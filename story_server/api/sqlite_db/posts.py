@@ -10,7 +10,7 @@ from story_server.server_utils.consts import (
     ALLOWED_CHARS,
 )
 from .users_functions import _add_permissions
-from ..jwt_functions import check_jwt
+from ..jwt_functions import check_jwt, decrypt_auth_token, _search_in_sub_dicts
 
 
 @check_jwt
@@ -23,8 +23,12 @@ def create_timeline(new_timeline, **kargs):
     """
     name = new_timeline.get("name", None)
     url = new_timeline.get("url", None)
-    create_user = new_timeline.get("create_user", None)
     description = new_timeline.get("description", None)
+    # TODO: del
+    create_user = new_timeline.get("create_user", None)
+
+    jwt_token = _search_in_sub_dicts(new_timeline, "jwt_token")
+    create_user = decrypt_auth_token(jwt_token)
     if _is_url_exists(url):
         return make_response(
             "Requested URL: {url} already exists!".format(url=url), 201
@@ -81,19 +85,20 @@ def add_event(timeline_url, new_event, **kargs):
             "URL '{url}' does not exists!".format(url=timeline_url), 201
         )
     event_id = str(uuid.uuid4())
-
-    _add_event_data(timeline_id=timeline_id, event_id=event_id, new_event=new_event)
+    jwt_token = _search_in_sub_dicts(new_event, "jwt_token")
+    _add_event_data(timeline_id=timeline_id, event_id=event_id, new_event=new_event, jwt_token=jwt_token)
 
     return make_response("added new record to '{timeline_url}'!".format(timeline_url=timeline_url), 200)
 
 
-def _add_event_data(timeline_id, event_id, new_event):
+def _add_event_data(timeline_id, event_id, new_event, jwt_token):
     """
     gets the timeline_id, event_id and the new event data.
     inserts the data of the new event to EVENTS table
     :param timeline_id:
     :param event_id:
     :param new_event:
+    :param jwt_token:
     :return:
     """
     header = new_event.get("header")
@@ -104,8 +109,10 @@ def _add_event_data(timeline_id, event_id, new_event):
     frame_color = new_event.get("frame_color", "rgb(33, 150, 243)")
     icon = new_event.get("icon", "")
     insertion_time = get_timestamp()
+    # TODO
     create_user = new_event.get("user")
-
+    create_user = decrypt_auth_token(jwt_token)
+    print(create_user)
     APP_DB.insert(
         table=TABLES_NAMES["EVENTS"],
         columns=TABLES_COLUMNS["EVENTS"],

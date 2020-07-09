@@ -7,7 +7,7 @@ from ...server_utils.consts import (
 from ...server_utils.time_functions import get_timestamp
 from .gets import _get_id_by_url
 
-from ..jwt_functions import generate_auth_token, check_jwt
+from ..jwt_functions import generate_auth_token, check_jwt, _search_in_sub_dicts, decrypt_auth_token
 
 
 def login(username, password):
@@ -75,7 +75,7 @@ def _check_permissions(timeline_url, username):
       FROM permissions
       WHERE timeline_url = ? AND username = 'public' AND role != 'none' """
     user_results = APP_DB.query_to_json(user_permissions_query, [timeline_url, username])
-    public_results = APP_DB.query_to_json(public_permissions_query, [timeline_url, username])
+    public_results = APP_DB.query_to_json(public_permissions_query, [timeline_url])
     if not user_results:
         if not public_results:
             return False
@@ -99,6 +99,11 @@ def check_permissions(timeline_url, username, **kargs):
     :param username:
     :return:
     """
+    # TODO:
+    jwt_token = _search_in_sub_dicts(kargs, "jwt_token")
+    username = decrypt_auth_token(jwt_token)
+    print(f"checked {username}")
+
     role = _check_permissions(timeline_url, username)
     if not role:
         return make_response("No Permissions!", 201)
@@ -133,9 +138,17 @@ def set_permissions(timeline_url, permissions_data, **kargs):
     :param permissions_data: the data
     :return:
     """
+
     username = permissions_data.get("username")
     role = permissions_data.get("role")
+    # TODO:
     adding_user = permissions_data.get("adding_user")
+
+    jwt_token = _search_in_sub_dicts(permissions_data, "jwt_token")
+    print(f"token: {jwt_token}")
+    adding_user = decrypt_auth_token(jwt_token)
+    print(f"adding user: {adding_user}")
+
     # check username has permissions to system.
     if role not in ["read", "write", "owner", "none"]:
         return make_response("non valid role type!", 201)

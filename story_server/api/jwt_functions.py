@@ -27,7 +27,7 @@ def generate_auth_token(user_id, ):
         return e
 
 
-def check_auth_token(auth_token):
+def decrypt_auth_token(auth_token):
     """
     Decodes the auth token
     :param auth_token:
@@ -48,7 +48,7 @@ def check_jwt(func):
         jwt_token = _search_in_sub_dicts(kargs, 'jwt_token')
         if jwt_token is None:
             return make_response("No JWT was supllied!", 400)
-        auth_check = check_auth_token(str.encode(jwt_token))
+        auth_check = decrypt_auth_token(str.encode(jwt_token))
         if not auth_check.startswith("INVALID TOKEN"):
             return func(*args, **kargs)
         else:
@@ -75,8 +75,10 @@ def _search_in_sub_dicts(main_dict, search_key):
 @check_jwt
 def basic_jwt_check(**kargs):
     from ..server_utils.time_functions import get_timestamp
-    print (get_timestamp())
-    return make_response('JWT token is valid.', 200)
+    print(get_timestamp())
+    jwt_token = _search_in_sub_dicts(kargs, search_key="jwt_token")
+    user = decrypt_auth_token(jwt_token)
+    return make_response('JWT token is valid., user: {user}'.format(user=user), 200)
 
 
 @check_jwt

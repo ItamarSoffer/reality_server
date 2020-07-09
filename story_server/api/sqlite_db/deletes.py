@@ -9,11 +9,15 @@ from ...server_utils.consts import (
 )
 from ...server_utils.time_functions import get_timestamp
 from .users_functions import check_permissions
-from ..jwt_functions import check_jwt
+from ..jwt_functions import check_jwt, decrypt_auth_token, _search_in_sub_dicts
 
 
 @check_jwt
 def delete_timeline(timeline_id, username, **kargs):
+    # TODO: username
+    jwt_token = _search_in_sub_dicts(kargs, "jwt_token")
+    username = decrypt_auth_token(jwt_token)
+
     role = _check_permission_by_timeline_id(timeline_id, username)
     if not role:
         return make_response("User has no permissions or wrong event ID", 201)
@@ -37,6 +41,10 @@ def delete_timeline(timeline_id, username, **kargs):
 
 @check_jwt
 def delete_event(event_id, username, **kargs):
+    # TODO: username
+    jwt_token = _search_in_sub_dicts(kargs, "jwt_token")
+    username = decrypt_auth_token(jwt_token)
+
     role = _check_permission_by_event(event_id, username)
     if not role:
         return make_response("User has no permissions or wrong event ID", 201)
