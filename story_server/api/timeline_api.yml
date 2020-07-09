@@ -82,11 +82,6 @@ paths:
       summary: timeslines by user permissions
       description: gets all the timelines a user has permissions to.
       parameters:
-        - name: username
-          in: query
-          type: string
-          description: username to get data to
-          required: true
         - name: num
           in: query
           type: integer
@@ -126,9 +121,6 @@ paths:
                 url:
                   type: string
                   description: the url for the timeline
-                create_user:
-                  type: string
-                  description: the user who created the timeline
                 timeline_description:
                   type: string
                   description: timeline description
@@ -199,9 +191,6 @@ paths:
                 hour:
                   type: string
                   description: the hour the event accured.
-                user:
-                  type: string
-                  description: the user who created the timeline.
                 link:
                   type: string
                   description: additional link for more data for the event.
@@ -215,7 +204,6 @@ paths:
                 - header
                 - date
                 - text
-                - user
               additionalProperties:
                 type: string
       responses:
@@ -284,11 +272,6 @@ paths:
           description: timeline url
           type: string
           required: True
-        - name: username
-          in: query
-          type: string
-          description: user name
-          required: true
         - name: jwt
           in: body
           description: the jwt token.
@@ -329,13 +312,8 @@ paths:
                 role:
                   type: string
                   description: role
-                adding_user:
-                  type: string
-                  description: the user that sent the action
               required:
-                - username
                 - role
-                - adding_user
 
       responses:
         200:
@@ -375,11 +353,6 @@ paths:
       summary: Deletes event
       description: Deletes event if user has permissions
       parameters:
-        - name: username
-          in: query
-          description: username
-          type: string
-          required: True
         - name: event_id
           in: query
           type: string
@@ -405,11 +378,6 @@ paths:
       summary: Deletes Timeline
       description: Deletes timeline and all its events if user has permissions
       parameters:
-        - name: username
-          in: query
-          description: user name
-          type: string
-          required: True
         - name: timeline_id
           in: query
           type: string

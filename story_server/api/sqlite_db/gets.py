@@ -34,12 +34,11 @@ def get_all_timelines(num=None, **kargs):
 
 
 @check_jwt
-def get_timelines_by_user(username, num=None, **kargs):
+def get_timelines_by_user(num=None, **kargs):
     """
     returns all the timelines a specific user can access
     :return:
     """
-    # TODO:
     jwt_token = _search_in_sub_dicts(kargs, "jwt_token")
     username = decrypt_auth_token(jwt_token)
     print(f"username: {username}")

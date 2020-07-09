@@ -13,8 +13,7 @@ from ..jwt_functions import check_jwt, decrypt_auth_token, _search_in_sub_dicts
 
 
 @check_jwt
-def delete_timeline(timeline_id, username, **kargs):
-    # TODO: username
+def delete_timeline(timeline_id, **kargs):
     jwt_token = _search_in_sub_dicts(kargs, "jwt_token")
     username = decrypt_auth_token(jwt_token)
 
@@ -40,8 +39,7 @@ def delete_timeline(timeline_id, username, **kargs):
 
 
 @check_jwt
-def delete_event(event_id, username, **kargs):
-    # TODO: username
+def delete_event(event_id, **kargs):
     jwt_token = _search_in_sub_dicts(kargs, "jwt_token")
     username = decrypt_auth_token(jwt_token)
 

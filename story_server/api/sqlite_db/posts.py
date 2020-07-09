@@ -24,8 +24,6 @@ def create_timeline(new_timeline, **kargs):
     name = new_timeline.get("name", None)
     url = new_timeline.get("url", None)
     description = new_timeline.get("description", None)
-    # TODO: del
-    create_user = new_timeline.get("create_user", None)
 
     jwt_token = _search_in_sub_dicts(new_timeline, "jwt_token")
     create_user = decrypt_auth_token(jwt_token)
@@ -65,7 +63,6 @@ def add_event(timeline_url, new_event, **kargs):
         - header
         - text
         - date
-        - user
 
         Additional that can be input:
         - link
@@ -78,7 +75,6 @@ def add_event(timeline_url, new_event, **kargs):
 
     :return:
     """
-    # TODO: check the inputs that is valid.
     timeline_id = _get_id_by_url(url=timeline_url)
     if timeline_id is None:
         return make_response(
@@ -109,8 +105,6 @@ def _add_event_data(timeline_id, event_id, new_event, jwt_token):
     frame_color = new_event.get("frame_color", "rgb(33, 150, 243)")
     icon = new_event.get("icon", "")
     insertion_time = get_timestamp()
-    # TODO
-    create_user = new_event.get("user")
     create_user = decrypt_auth_token(jwt_token)
     print(create_user)
     APP_DB.insert(

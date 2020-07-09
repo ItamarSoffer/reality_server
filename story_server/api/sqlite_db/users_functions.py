@@ -92,14 +92,13 @@ def _check_permissions(timeline_url, username):
 
 
 @check_jwt
-def check_permissions(timeline_url, username, **kargs):
+def check_permissions(timeline_url, **kargs):
     """
 
     :param timeline_url:
     :param username:
     :return:
     """
-    # TODO:
     jwt_token = _search_in_sub_dicts(kargs, "jwt_token")
     username = decrypt_auth_token(jwt_token)
     print(f"checked {username}")
@@ -141,9 +140,6 @@ def set_permissions(timeline_url, permissions_data, **kargs):
 
     username = permissions_data.get("username")
     role = permissions_data.get("role")
-    # TODO:
-    adding_user = permissions_data.get("adding_user")
-
     jwt_token = _search_in_sub_dicts(permissions_data, "jwt_token")
     print(f"token: {jwt_token}")
     adding_user = decrypt_auth_token(jwt_token)
