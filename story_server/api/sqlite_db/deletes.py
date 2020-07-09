@@ -19,12 +19,12 @@ def delete_timeline(timeline_id, **kargs):
 
     role = _check_permission_by_timeline_id(timeline_id, username)
     if not role:
-        return make_response("User has no permissions or wrong event ID", 201)
+        return make_response("User has no permissions or wrong timeline ID", 201)
 
     role = role[0][0]
-    if role == 'read':
-        return make_response("User doesnt have permissions to delete events!", 201)
-    elif role in ['owner', 'write']:
+    if role in ['read', 'write']:
+        return make_response("User doesnt have permissions to delete timeline!", 201)
+    elif role in ['owner']:
         delete_events_query = """
             DELETE
             FROM events
@@ -35,6 +35,12 @@ def delete_timeline(timeline_id, **kargs):
             FROM timeline_ids
             WHERE id = ?"""
         APP_DB.run(delete_timeline_query, [timeline_id])
+        delete_permissions_query = """
+                    DELETE
+                    FROM permissions
+                    WHERE timeline_id = ?"""
+        APP_DB.run(delete_permissions_query, [timeline_id])
+
         return make_response("Timeline and its events deleted successfully", 200)
 
 

@@ -101,7 +101,6 @@ def check_permissions(timeline_url, **kargs):
     """
     jwt_token = _search_in_sub_dicts(kargs, "jwt_token")
     username = decrypt_auth_token(jwt_token)
-    print(f"checked {username}")
 
     role = _check_permissions(timeline_url, username)
     if not role:
@@ -141,9 +140,7 @@ def set_permissions(timeline_url, permissions_data, **kargs):
     username = permissions_data.get("username")
     role = permissions_data.get("role")
     jwt_token = _search_in_sub_dicts(permissions_data, "jwt_token")
-    print(f"token: {jwt_token}")
     adding_user = decrypt_auth_token(jwt_token)
-    print(f"adding user: {adding_user}")
 
     # check username has permissions to system.
     if role not in ["read", "write", "owner", "none"]:

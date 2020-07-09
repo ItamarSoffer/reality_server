@@ -203,7 +203,6 @@ paths:
               required:
                 - header
                 - date
-                - text
               additionalProperties:
                 type: string
       responses:
