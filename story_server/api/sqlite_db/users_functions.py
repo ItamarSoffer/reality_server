@@ -5,7 +5,7 @@ from ...server_utils.consts import (
     TABLES_NAMES,
 )
 from ...server_utils.time_functions import get_timestamp
-from .gets import _get_id_by_url
+from .gets import _get_id_by_url, _is_url_exists
 
 from ..jwt_functions import generate_auth_token, check_jwt, _search_in_sub_dicts, decrypt_auth_token
 
@@ -101,6 +101,9 @@ def check_permissions(timeline_url, **kargs):
     """
     jwt_token = _search_in_sub_dicts(kargs, "jwt_token")
     username = decrypt_auth_token(jwt_token)
+    url_exists = _is_url_exists(timeline_url)
+    if not url_exists:
+        return make_response("URL does not exists!", 204)
 
     role = _check_permissions(timeline_url, username)
     if not role:
