@@ -1,16 +1,7 @@
 from flask import make_response
 from ..__main__ import APP_DB
-from ...server_utils.consts import (
-    TABLES_COLUMNS,
-    TABLES_NAMES,
-    RESERVED_TIMELINE_NAMES,
-    ALLOWED_CHARS,
-
-)
-from ...server_utils.time_functions import get_timestamp
-from .users_functions import check_permissions
 from ..jwt_functions import check_jwt, decrypt_auth_token, _search_in_sub_dicts
-
+from .users_functions import PERMISSION_POWER
 
 @check_jwt
 def delete_timeline(timeline_id, **kargs):
@@ -22,9 +13,9 @@ def delete_timeline(timeline_id, **kargs):
         return make_response("User has no permissions or wrong timeline ID", 201)
 
     role = role[0][0]
-    if role in ['read', 'write']:
+    if PERMISSION_POWER[role] < PERMISSION_POWER['owner']:
         return make_response("User doesnt have permissions to delete timeline!", 201)
-    elif role in ['owner']:
+    else:
         delete_events_query = """
             DELETE
             FROM events
@@ -54,9 +45,9 @@ def delete_event(event_id, **kargs):
         return make_response("User has no permissions or wrong event ID", 201)
 
     role = role[0][0]
-    if role == 'read':
+    if PERMISSION_POWER[role] < PERMISSION_POWER['write']:
         return make_response("User doesnt have permissions to delete events!", 201)
-    elif role in ['owner', 'write']:
+    else:
         delete_query = """
         DELETE
         FROM events

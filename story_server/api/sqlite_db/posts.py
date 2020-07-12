@@ -1,9 +1,9 @@
 import uuid
 from flask import make_response
-from story_server.api.__main__ import APP_DB
-from story_server.api.sqlite_db.gets import _get_id_by_url, _is_url_exists
-from story_server.server_utils.time_functions import get_timestamp
-from story_server.server_utils.consts import (
+from ..__main__ import APP_DB
+from .gets import _get_id_by_url, _is_url_exists
+from ...server_utils.time_functions import get_timestamp
+from ...server_utils.consts import (
     TABLES_COLUMNS,
     TABLES_NAMES,
     RESERVED_TIMELINE_NAMES,
@@ -50,7 +50,7 @@ def create_timeline(new_timeline, **kargs):
     )
     _add_permissions(timeline_url=url,
                      username=create_user,
-                     role="owner")
+                     role="creator")
     return make_response("new Timeline '{name}' created!".format(name=name), 200)
 
 

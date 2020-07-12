@@ -48,12 +48,13 @@ def login(username, password):
 
 
 def _add_permissions(timeline_url, username, role):
+
     timeline_id = _get_id_by_url(timeline_url)
     # deletes prev permissions:
     del_q = \
         """ DELETE
               FROM permissions
-             WHERE timeline_url = ? and username = ? and role != 'owner'
+             WHERE timeline_url = ? and username = ? and role != 'creator'
         """
     APP_DB.run(del_q, [timeline_url, username])
     APP_DB.insert(table=TABLES_NAMES["PERMISSIONS"],
@@ -67,12 +68,13 @@ def _add_permissions(timeline_url, username, role):
                   ])
 
 
-def _check_permissions(timeline_url, username):
+def _check_permissions(timeline_url, username, return_level=False):
     """
     return the max permission level for a user
     (if the public has stronger permissions- he will get it)
     :param timeline_url:
     :param username:
+    :param return_level: if true, will return only the permission level.
     :return:
     """
     user_permissions_query = """
@@ -87,8 +89,12 @@ def _check_permissions(timeline_url, username):
     user_results = APP_DB.query_to_json(user_permissions_query, [timeline_url, username])
     public_results = APP_DB.query_to_json(public_permissions_query, [timeline_url])
 
-    permission = _calc_max_permission(user_results, public_results)
-    return {'username': username, 'role': permission}
+    permission_level = _calc_max_permission(user_results, public_results)
+    if return_level:
+        return permission_level
+    else:
+        role = [key for key, value in PERMISSION_POWER.items() if value == permission_level][0]
+        return {'username': username, 'role': role}
 
 
 def _calc_max_permission(*permissions_data):
@@ -103,9 +109,10 @@ def _calc_max_permission(*permissions_data):
             permissions_power.append(PERMISSION_POWER[record[0]['role']])
         else:
             permissions_power.append(-1)
-    max_permission = max(*permissions_power)
-    return [key for key, value in PERMISSION_POWER.items() if value == max_permission][0]
+    max_permission_level = max(*permissions_power)
+    return max_permission_level
 
+# good
 @check_jwt
 def check_permissions(timeline_url, **kargs):
     """
@@ -176,22 +183,28 @@ def set_permissions(timeline_url, permissions_data, **kargs):
     adding_user = decrypt_auth_token(jwt_token)
 
     # check username has permissions to system.
+
     if role not in PERMISSION_POWER.keys():
         return make_response("non valid role type!", 201)
+    if username == adding_user:
+        return make_response("Dont mess with your OWN permissions.", 201)
     elif not (_user_has_story_permissions(username) or username == 'public'):
         return make_response("User '{user}' has no permissions to Story!".format(user=username), 201)
     # never will be because the jwt auth.
     elif not _user_has_story_permissions(adding_user):
         return make_response("User '{user}' has no permissions to Story!".format(user=adding_user), 201)
     # checks he doesnt messes the permissions:
-    elif _is_owner(username, timeline_url):
-        return make_response("You are the owner, Do not mess with the permissions.", 201)
+    elif _check_permissions(timeline_url, username, return_level=True) == PERMISSION_POWER['creator']:
+        return make_response("Do not mess with the creator's permissions.", 201)
+
     # adds relevant permissions.
-    elif _is_owner(adding_user, timeline_url):
+    elif _check_permissions(timeline_url, adding_user, return_level=True) >= PERMISSION_POWER['owner']:
+        if role == 'creator':
+            return make_response("You cannot add creator permissions.", 201)
         _add_permissions(timeline_url=timeline_url, username=username, role=role)
         return make_response("Permissions were set to {username}".format(username=username), 200)
     else:
-        return make_response("Only owner can change permissions.", 201)
+        return make_response("Only owner and creators can change permissions.", 201)
 
 
 @check_jwt
