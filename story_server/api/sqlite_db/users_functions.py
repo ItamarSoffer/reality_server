@@ -9,6 +9,15 @@ from .gets import _get_id_by_url, _is_url_exists
 
 from ..jwt_functions import generate_auth_token, check_jwt, _search_in_sub_dicts, decrypt_auth_token
 
+PERMISSION_POWER = {
+    None: -1,
+    'none': 0,
+    'read': 1,
+    'write': 2,
+    'owner': 3,
+    'creator': 4
+}
+
 
 def login(username, password):
     """
@@ -60,7 +69,8 @@ def _add_permissions(timeline_url, username, role):
 
 def _check_permissions(timeline_url, username):
     """
-
+    return the max permission level for a user
+    (if the public has stronger permissions- he will get it)
     :param timeline_url:
     :param username:
     :return:
@@ -76,20 +86,25 @@ def _check_permissions(timeline_url, username):
       WHERE timeline_url = ? AND username = 'public' AND role != 'none' """
     user_results = APP_DB.query_to_json(user_permissions_query, [timeline_url, username])
     public_results = APP_DB.query_to_json(public_permissions_query, [timeline_url])
-    if not user_results:
-        if not public_results:
-            return False
-        else:
-            return public_results[0]
-    else:
-        if user_results[0]['role'] == 'read':
-            if public_results and public_results[0]['role'] == 'write':
-                return public_results[0]
-            else:
-                return user_results[0]
-        else:
-            return user_results[0]
 
+    permission = _calc_max_permission(user_results, public_results)
+    return {'username': username, 'role': permission}
+
+
+def _calc_max_permission(*permissions_data):
+    """
+    calculated the max permission power by the data
+    :param permissions_data: list of results for query, of usernames and roles.
+    :return:
+    """
+    permissions_power = []
+    for record in permissions_data:
+        if record:
+            permissions_power.append(PERMISSION_POWER[record[0]['role']])
+        else:
+            permissions_power.append(-1)
+    max_permission = max(*permissions_power)
+    return [key for key, value in PERMISSION_POWER.items() if value == max_permission][0]
 
 @check_jwt
 def check_permissions(timeline_url, **kargs):
@@ -128,7 +143,22 @@ def _is_owner(username, timeline_url):
     if not permissions:
         return False
     else:
-        return permissions['role'] == 'owner'
+        return permissions == 'owner'
+
+
+def _role_check(username, timeline_url, role):
+    """
+    checks if the user has the role for the timeline.
+    :param username:
+    :param timeline_url:
+    :param role:
+    :return:
+    """
+    permissions = _check_permissions(username=username, timeline_url=timeline_url)
+    if not permissions:
+        return False
+    else:
+        return permissions['role'] == role
 
 
 @check_jwt
@@ -146,10 +176,11 @@ def set_permissions(timeline_url, permissions_data, **kargs):
     adding_user = decrypt_auth_token(jwt_token)
 
     # check username has permissions to system.
-    if role not in ["read", "write", "owner", "none"]:
+    if role not in PERMISSION_POWER.keys():
         return make_response("non valid role type!", 201)
     elif not (_user_has_story_permissions(username) or username == 'public'):
         return make_response("User '{user}' has no permissions to Story!".format(user=username), 201)
+    # never will be because the jwt auth.
     elif not _user_has_story_permissions(adding_user):
         return make_response("User '{user}' has no permissions to Story!".format(user=adding_user), 201)
     # checks he doesnt messes the permissions:
