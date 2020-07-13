@@ -149,6 +149,14 @@ paths:
           schema:
             allOf:
             - $ref: '#/definitions/JwtAuth'
+            - type: object
+              properties:
+                min_time:
+#                  type: string
+                  description: min time to fetch events.
+                max_time:
+#                  type: string
+                  description: max time to fetch events
       responses:
         200:
           description: Successfully read timeline events from db.

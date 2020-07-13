@@ -98,19 +98,37 @@ def get_timeline(timeline_url, **kargs):
     :param timeline_url:
     :return:
     """
-    # sleep(2)
     timeline_id = _get_id_by_url(url=timeline_url)
     if timeline_id is None:
         return make_response(
             "URL '{url}' does not exists!".format(url=timeline_url), 404
         )
+    args = [timeline_id]
+
+    min_time = _search_in_sub_dicts(kargs, "min_time")
+    max_time = _search_in_sub_dicts(kargs, "max_time")
+    if min_time:
+        min_time_string = "AND event_time >= ?"
+        args.append(min_time)
+    else:
+        min_time_string = ''
+
+    if max_time:
+        max_time_string = "AND event_time <= ?"
+        args.append(max_time)
+    else:
+        max_time_string = ''
 
     get_timeline_query = """
     SELECT *
       FROM events
 	 WHERE timeline_id = ?
-     ORDER BY event_time DESC """
-    results = APP_DB.query_to_json(query_string=get_timeline_query, args=[timeline_id])
+	 {min_time_string}
+	 {max_time_string}
+     ORDER BY event_time DESC """\
+        .format(min_time_string=min_time_string,
+                max_time_string=max_time_string)
+    results = APP_DB.query_to_json(query_string=get_timeline_query, args=args)
     if results is None:
         return make_response("Query Error!", 500)
     else:
