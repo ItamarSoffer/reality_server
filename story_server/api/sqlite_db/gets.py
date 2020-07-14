@@ -4,11 +4,17 @@ from datetime import datetime
 import pandas as pd
 from story_server.api.__main__ import APP_DB
 from story_server.server_utils.consts import (
+    TABLES_COLUMNS,
+    TABLES_NAMES,
     SYSTEM_NAME,
     XLSX_FOLDER,
+    IMPORT_XLSX_FOLDER
 )
+import uuid
+from ...server_utils.time_functions import get_timestamp
 
 from ..jwt_functions import check_jwt, _search_in_sub_dicts, decrypt_auth_token
+
 
 
 @check_jwt
@@ -166,6 +172,82 @@ def get_timeline_xlsx_file(timeline_url, **kwargs):
     )
 
 
+# @check_jwt
+def import_xlsx_file(timeline_url, **kwargs):
+    print(kwargs)
+    upfile_raw = _search_in_sub_dicts(kwargs, 'upfile')
+
+    file_name = '{timeline_url}_upload_{time}.xlsx'\
+        .format(timeline_url=timeline_url,
+                time=datetime.today().strftime("%Y%m%d-%H%M%S"))
+    output_file =os.path.join(IMPORT_XLSX_FOLDER, file_name)
+
+    with open(output_file, 'wb') as f:
+        f.write(upfile_raw.read())
+
+    xlsx_data = pd.concat(pd.read_excel(output_file, sheet_name=None), ignore_index=True)
+    columns = xlsx_data.columns.tolist()
+    print(columns)
+    valid_column_names = ["title", "content", "link", "event_time", "color", "icon"]
+    if 'title' not in columns:
+        print("missing title field")
+        return make_response({"code": 201, 'message': "missing title field"}, 201)
+    elif 'event_time' not in columns:
+        print("missing event_time field")
+        return make_response({"code": 201, 'message': "missing event_time field"}, 201)
+    elif not all(elem in valid_column_names for elem in columns):
+        print("There are non valid field names")
+        return make_response({"code": 201, 'message': "There are non valid field names"}, 201)
+    else:
+        timeline_id = _get_id_by_url(timeline_url)
+        for index in range(len(xlsx_data)):
+            event_id = str(uuid.uuid4())
+            line = xlsx_data.iloc[index]
+            header = _extract_field_from_df_line(line, "title")
+            text = _extract_field_from_df_line(line, "content", '')
+            link = _extract_field_from_df_line(line, "link", None)
+            event_time = _extract_field_from_df_line(line, "event_time")
+            frame_color = _extract_field_from_df_line(line, "color", 'rgb(33, 150, 243)')
+            icon = _extract_field_from_df_line(line, "icon", '')
+            insertion_time = get_timestamp()
+            create_user = 'XLSX'
+            APP_DB.insert(
+                table=TABLES_NAMES["EVENTS"],
+                columns=TABLES_COLUMNS["EVENTS"],
+                data=[
+                    timeline_id,
+                    event_id,
+                    header,
+                    text,
+                    link,
+                    event_time,
+                    frame_color,
+                    icon,
+                    insertion_time,
+                    create_user,
+                ],
+            )
+        return make_response({"status": 'done',
+                              "code": 200,
+                              "message": "Added {} new events to timeline".format(len(xlsx_data))},
+                             200)
+
+
+def _extract_field_from_df_line(line, field, default_val=None):
+    """
+    extracts the field and handle key error.
+    if KetError- return default val
+    :param line:
+    :param field:
+    :param default_val:
+    :return:
+    """
+    try:
+        return line[field]
+    except KeyError:
+        return default_val
+
+
 def _create_timeline_xlsx(timeline_url):
     """
     queries the db and creates timeline xlsx
@@ -175,7 +257,7 @@ def _create_timeline_xlsx(timeline_url):
     """
 
     events_query = """
-    SELECT name, header, text, link, event_time, icon, insertion_time, e.create_user
+    SELECT name, header as 'title', text as 'content', link, event_time, icon, frame_color as 'color', insertion_time, e.create_user
 FROM events e
  INNER JOIN timeline_ids t
  ON (e.timeline_id = t.id)

@@ -1,0 +1,48 @@
+swagger: "2.0"
+info:
+  description: This is the swagger file that goes with our server code
+  version: "1.0.0"
+  title: Swagger ReST Article
+consumes:
+  - multipart/form-data
+produces:
+  - application/json
+
+basePath: /api_upload
+
+# Paths supported by the server application
+paths:
+  /{timeline_url}/upload_xlsx:
+    post:
+      operationId: story_server.api.gets.import_xlsx_file
+      tags:
+        - Timeline
+        - XLSX
+      summary: imports xlsx file
+      description: imports xlsx file to story
+      parameters:
+        - name: timeline_url
+          in: path
+          description: the address of the timeline
+          type: string
+          required: True
+        - in: formData
+          name: upfile
+          type: file
+          description: The file to upload.
+
+      responses:
+        200:
+          description: returned file successfully.
+
+definitions:
+  JwtAuth:
+    type: object
+    properties:
+      jwt_token:
+        type: string
+        description: the icon for the timeline
+
+
+
+

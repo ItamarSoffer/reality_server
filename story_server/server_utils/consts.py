@@ -53,5 +53,7 @@ DB_PATH = r"C:\Scripts\Story\server\sqlite_db\timeline.db"
 SYSTEM_NAME = "STORY"
 if sys.platform.startswith("win"):
     XLSX_FOLDER = r"C:\Scripts\Story\xlsx_tmp"
+    IMPORT_XLSX_FOLDER = r"C:\Scripts\Story\xlsx_import_tmp"
 else:
     XLSX_FOLDER = r'/mnt/data/xlsx_tmp'
+    IMPORT_XLSX_FOLDER = r'/mnt/data/xlsx_import_tmp'

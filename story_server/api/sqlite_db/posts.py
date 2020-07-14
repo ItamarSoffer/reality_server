@@ -106,7 +106,6 @@ def _add_event_data(timeline_id, event_id, new_event, jwt_token):
     icon = new_event.get("icon", "")
     insertion_time = get_timestamp()
     create_user = decrypt_auth_token(jwt_token)
-    print(create_user)
     APP_DB.insert(
         table=TABLES_NAMES["EVENTS"],
         columns=TABLES_COLUMNS["EVENTS"],

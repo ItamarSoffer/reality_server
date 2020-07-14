@@ -17,9 +17,11 @@ else:
 # Read the swagger.yml file to configure the endpoints
 my_dir = os.path.dirname(os.path.realpath(__file__))
 config_path = os.path.join(my_dir, "api", "timeline_api.yml")
+config_path_xlsx = os.path.join(my_dir, "api", "timeline_api_files.yml")
 
 CORS(app.app)
 app.add_api(config_path)
+app.add_api(config_path_xlsx)
 
 # app.add_api('timeline_api.yml')
 # to open the swagger UI install: connexion[swagger-ui]
