@@ -152,11 +152,12 @@ paths:
             - type: object
               properties:
                 min_time:
-#                  type: string
                   description: min time to fetch events.
                 max_time:
-#                  type: string
                   description: max time to fetch events
+                search_string:
+                  description: string to search in events.
+
       responses:
         200:
           description: Successfully read timeline events from db.

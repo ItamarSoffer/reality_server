@@ -107,6 +107,7 @@ def get_timeline(timeline_url, **kargs):
 
     min_time = _search_in_sub_dicts(kargs, "min_time")
     max_time = _search_in_sub_dicts(kargs, "max_time")
+    search_string = _search_in_sub_dicts(kargs, "search_string")
     if min_time:
         min_time_string = "AND event_time >= ?"
         args.append(min_time)
@@ -119,15 +120,23 @@ def get_timeline(timeline_url, **kargs):
     else:
         max_time_string = ''
 
+    if search_string:
+        search_string_query = "AND (header LIKE '%{search_string}%' OR text LIKE '%{search_string}%')"\
+            .format(search_string=search_string)
+    else:
+        search_string_query = ''
+
     get_timeline_query = """
     SELECT *
       FROM events
 	 WHERE timeline_id = ?
 	 {min_time_string}
 	 {max_time_string}
+	 {search_string_query}
      ORDER BY event_time DESC """\
         .format(min_time_string=min_time_string,
-                max_time_string=max_time_string)
+                max_time_string=max_time_string,
+                search_string_query=search_string_query)
     results = APP_DB.query_to_json(query_string=get_timeline_query, args=args)
     if results is None:
         return make_response("Query Error!", 500)
@@ -189,7 +198,7 @@ FROM events e
 
     writer = pd.ExcelWriter(xlsx_path, engine="xlsxwriter")
     timeline_events_df.to_excel(
-        writer, sheet_name=f"{timeline_url}_events", index=False
+        writer, sheet_name="{timeline_url}_events".format(timeline_url=timeline_url), index=False
     )
     timeline_data_df.to_excel(writer, sheet_name="Timeline_Data", index=False)
 
