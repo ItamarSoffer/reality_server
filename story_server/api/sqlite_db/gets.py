@@ -121,7 +121,11 @@ def get_timeline(timeline_url, **kargs):
         max_time_string = ''
 
     if search_string:
-        search_string_query = "AND (header LIKE '%{search_string}%' OR text LIKE '%{search_string}%')"\
+        search_string_query = \
+            """AND (header LIKE '%{search_string}%'
+            OR text LIKE '%{search_string}%'
+            OR link LIKE '%{search_string}%')
+            """\
             .format(search_string=search_string)
     else:
         search_string_query = ''
