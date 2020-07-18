@@ -32,7 +32,7 @@ def get_all_timelines(num=None, **kargs):
       )
       SELECT t.*, counter
       FROM timeline_ids t
-      INNER JOIN event_counter e
+      LEFT OUTER JOIN event_counter e
       ON t.id = e.timeline_id
       ORDER BY create_time DESC
     """
@@ -66,7 +66,7 @@ SELECT id, url, username, role , t.description, t.name, t.create_user, e.counter
   FROM permissions p
   INNER JOIN  timeline_ids t
   ON t.id = p.timeline_id
-  INNER JOIN event_counter e 
+  LEFT OUTER JOIN event_counter e 
   ON t.id = e.timeline_id
   WHERE username = ? and role != 'none'
     """
@@ -209,8 +209,8 @@ def import_xlsx_file(timeline_url, **kwargs):
             event_time = _extract_field_from_df_line(line, "event_time")
             frame_color = _extract_field_from_df_line(line, "color", 'rgb(33, 150, 243)')
             icon = _extract_field_from_df_line(line, "icon", '')
+            create_user = _extract_field_from_df_line(line, "create_user", 'XLSX')
             insertion_time = get_timestamp()
-            create_user = 'XLSX'
             APP_DB.insert(
                 table=TABLES_NAMES["EVENTS"],
                 columns=TABLES_COLUMNS["EVENTS"],

@@ -214,9 +214,17 @@ def permitted_users(timeline_url, **kargs):
     :param timeline_url:
     :return:
     """
+    # in NH- the display name is from LDAP
     query = """
-    SELECT username, role
-    FROM permissions
+    SELECT p.username, p.role, 
+    CASE 
+    WHEN p.username='public' THEN 'PUBLIC'
+    ELSE u.display_name
+    END AS display_name
+    FROM permissions p
+    LEFT OUTER JOIN users u
+    ON u.username = p.username
     WHERE timeline_url = ? and role != 'none'
+    
     """
     return APP_DB.query_to_json(query, args=[timeline_url])
