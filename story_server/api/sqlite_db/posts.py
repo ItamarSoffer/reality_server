@@ -76,6 +76,7 @@ def add_event(timeline_url, new_event, **kargs):
     :return:
     """
     timeline_id = _get_id_by_url(url=timeline_url)
+    tags = _search_in_sub_dicts(new_event, "tags")
     if timeline_id is None:
         return make_response(
             "URL '{url}' does not exists!".format(url=timeline_url), 201
@@ -83,8 +84,17 @@ def add_event(timeline_url, new_event, **kargs):
     event_id = str(uuid.uuid4())
     jwt_token = _search_in_sub_dicts(new_event, "jwt_token")
     _add_event_data(timeline_id=timeline_id, event_id=event_id, new_event=new_event, jwt_token=jwt_token)
-
+    _add_tags(timeline_id, event_id, tags)
     return make_response("added new record to '{timeline_url}'!".format(timeline_url=timeline_url), 200)
+
+
+def _add_tags(timeline_id, event_id, tags):
+    # "EVENTS_TAGS": ['story_id', 'event_id', 'tag_id', 'insertion_time']
+    for tag in tags:
+        APP_DB.insert(table=TABLES_NAMES["EVENTS_TAGS"],
+                      columns=TABLES_COLUMNS["EVENTS_TAGS"],
+                      data=[timeline_id, event_id, tag, get_timestamp()]
+                      )
 
 
 def _add_event_data(timeline_id, event_id, new_event, jwt_token):
@@ -123,6 +133,7 @@ def _add_event_data(timeline_id, event_id, new_event, jwt_token):
         ],
     )
     print("inserted data")
+
 
 
 @check_jwt

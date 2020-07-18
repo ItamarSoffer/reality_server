@@ -29,7 +29,7 @@ TABLES_COLUMNS = {
     "CONNECTIONS": ["user", "connection_time"],
     "PERMISSIONS": ["timeline_id", "timeline_url", "username", "role", "insertion_time"],
     "STORY_TAGS": ['story_id', 'tag_id', 'tag_name', 'tag_color', 'create_time'],
-    "EVENTS_TAGS": ['event_id', 'tag_id', 'insertion_time']
+    "EVENTS_TAGS": ['story_id', 'event_id', 'tag_id', 'insertion_time']
 
 }
 

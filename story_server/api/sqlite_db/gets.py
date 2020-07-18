@@ -151,6 +151,12 @@ def get_timeline(timeline_url, **kargs):
     if results is None:
         return make_response("Query Error!", 500)
     else:
+        import time
+        start = time.perf_counter()
+        for line in results:
+            line['tags'] = get_tags_by_event(line['event_id'])
+        end = time.perf_counter()
+        print("took: {} seconds".format(end-start))
         return {"events": results}
 
 
@@ -336,10 +342,27 @@ def _is_url_exists(url):
 
 
 @check_jwt
-def get_tags(timeline_url, **kargs):
+def get_tags_by_timeline(timeline_url, **kargs):
+    """
+    returns all tags of story
+    :param timeline_url:
+    :param kargs:
+    :return:
+    """
     story_id = _get_id_by_url(timeline_url)
     tag_query = """
     SELECT tag_id, tag_name, tag_color
       FROM story_tags
       WHERE story_id = ?"""
     return APP_DB.query_to_json(tag_query, [story_id])
+
+
+def get_tags_by_event(event_id, **kargs):
+    tag_query = """
+    SELECT e.tag_id, s.tag_name, s.tag_color
+  FROM events_tags e
+ INNER JOIN story_tags s 
+   ON s.tag_id = e.tag_id
+   WHERE e.event_id = ?
+          """
+    return APP_DB.query_to_json(tag_query, [event_id])

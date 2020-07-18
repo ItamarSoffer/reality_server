@@ -209,6 +209,9 @@ paths:
                 icon:
                   type: string
                   description: the icon for the timeline
+                tags:
+                  type: array
+                  description: the icon for the timeline
               required:
                 - header
                 - date
@@ -438,7 +441,7 @@ paths:
 
   /timeline/{timeline_url}/get_tags:
     post:
-      operationId: story_server.api.gets.get_tags
+      operationId: story_server.api.gets.get_tags_by_timeline
       tags:
         - Timeline
         - Tags
