@@ -27,7 +27,10 @@ TABLES_COLUMNS = {
         "create_user",
     ],
     "CONNECTIONS": ["user", "connection_time"],
-    "PERMISSIONS": ["timeline_id", "timeline_url", "username", "role", "insertion_time"]
+    "PERMISSIONS": ["timeline_id", "timeline_url", "username", "role", "insertion_time"],
+    "STORY_TAGS": ['story_id', 'tag_id', 'tag_name', 'tag_color', 'create_time'],
+    "EVENTS_TAGS": ['event_id', 'tag_id', 'insertion_time']
+
 }
 
 
@@ -37,7 +40,10 @@ TABLES_NAMES = {
     "USERS": "users",
     "EVENTS": "events",
     "CONNECTIONS": "connections",
-    "PERMISSIONS": "permissions"
+    "PERMISSIONS": "permissions",
+    "EVENTS_TAGS": "events_tags",
+    "STORY_TAGS": "story_tags"
+
 }
 
 RESERVED_TIMELINE_NAMES = ["add", "delete", "del", ".", "?", "/"]

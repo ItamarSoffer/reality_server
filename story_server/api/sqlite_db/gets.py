@@ -333,3 +333,13 @@ def _is_url_exists(url):
     WHERE url = ? """
 
     return APP_DB.query_to_json(url_query_check, [url])
+
+
+@check_jwt
+def get_tags(timeline_url, **kargs):
+    story_id = _get_id_by_url(timeline_url)
+    tag_query = """
+    SELECT tag_id, tag_name, tag_color
+      FROM story_tags
+      WHERE story_id = ?"""
+    return APP_DB.query_to_json(tag_query, [story_id])

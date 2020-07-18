@@ -125,6 +125,26 @@ def _add_event_data(timeline_id, event_id, new_event, jwt_token):
     print("inserted data")
 
 
+@check_jwt
+def add_tag(timeline_url, **kargs):
+    # check the user permissions
+    story_id = _get_id_by_url(timeline_url)
+    tag_name = _search_in_sub_dicts(kargs, "tag_name")
+    tag_color = _search_in_sub_dicts(kargs, "tag_color")
+    tag_id = str(uuid.uuid4())
+
+    # "STORY_TAGS": ['story_id', 'tag_id', 'tag_name', 'tag_color', 'create_time'],
+    APP_DB.insert(table=TABLES_NAMES["STORY_TAGS"],
+                  columns=TABLES_COLUMNS["STORY_TAGS"],
+                  data=[story_id,
+                        tag_id,
+                        tag_name,
+                        tag_color,
+                        get_timestamp()
+                        ])
+    return make_response("created new tag", 200)
+
+
 def _check_allowed_chars(string, allowed_chars):
     """
     checks if all chars in string are in allowed_chars list

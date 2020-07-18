@@ -215,7 +215,7 @@ paths:
               additionalProperties:
                 type: string
       responses:
-        201:
+        200:
           description: Successfully created new event
 
   /timeline/{timeline_url}/get_xlsx:
@@ -401,6 +401,66 @@ paths:
       responses:
         200:
           description: Timeline has been deleted.
+
+  /timeline/{timeline_url}/add_tag:
+    post:
+      operationId: story_server.api.posts.add_tag
+      tags:
+        - Timeline
+        - Tags
+      summary: Add new tag to timeline
+      description: Add new tag to timeline
+      parameters:
+        - name: timeline_url
+          in: path
+          description: the address of the timeline
+          type: string
+          required: True
+        - name: new_tag
+          in: body
+          description: tag to create
+          required: True
+          schema:
+            allOf:
+              - $ref: '#/definitions/JwtAuth'
+              - type: object
+                properties:
+                  tag_name:
+                    type: string
+                    description: The tag name.
+                required:
+                  - tag_name
+                additionalProperties:
+                  type: string
+      responses:
+        200:
+          description: Successfully added new event
+
+  /timeline/{timeline_url}/get_tags:
+    post:
+      operationId: story_server.api.gets.get_tags
+      tags:
+        - Timeline
+        - Tags
+      summary: get all story tags
+      description: get all tags per story
+      parameters:
+        - name: timeline_url
+          in: path
+          description: the address of the timeline
+          type: string
+          required: True
+        - name: jwt
+          in: body
+          description: the jwt token.
+          required: True
+          schema:
+            allOf:
+            - $ref: '#/definitions/JwtAuth'
+      responses:
+        200:
+          description: returned timeline tags
+
 
   /check:
     post:
