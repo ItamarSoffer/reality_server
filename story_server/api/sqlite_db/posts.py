@@ -9,7 +9,7 @@ from ...server_utils.consts import (
     RESERVED_TIMELINE_NAMES,
     ALLOWED_CHARS,
 )
-from .users_functions import _add_permissions
+from .users_functions import _add_permissions, _check_permissions, PERMISSION_POWER
 from ..jwt_functions import check_jwt, decrypt_auth_token, _search_in_sub_dicts
 
 
@@ -76,10 +76,17 @@ def add_event(timeline_url, new_event, **kargs):
     :return:
     """
     timeline_id = _get_id_by_url(url=timeline_url)
+    jwt_token = _search_in_sub_dicts(new_event, "jwt_token")
+    user = decrypt_auth_token(jwt_token)
     if timeline_id is None:
         return make_response(
             "URL '{url}' does not exists!".format(url=timeline_url), 201
         )
+    elif _check_permissions(timeline_url, user, return_level=True) < PERMISSION_POWER['write']:
+        return make_response(
+            "User {user} has no write permissions".format(user=user), 201
+        )
+    
     event_id = _search_in_sub_dicts(new_event, "event_id")
     if event_id is None:
         return _create_new_event(timeline_url=timeline_url, new_event=new_event)
