@@ -57,7 +57,7 @@ def create_timeline(new_timeline, **kargs):
 @check_jwt
 def add_event(timeline_url, new_event, **kargs):
     """
-    adds new event to timeline.
+    adds and updates new event to timeline.
     :param timeline_url: the url of the timeline to add to.
     :param new_event: a dict with the params of the event. it contains:
         - header
@@ -76,25 +76,102 @@ def add_event(timeline_url, new_event, **kargs):
     :return:
     """
     timeline_id = _get_id_by_url(url=timeline_url)
-    tags = _search_in_sub_dicts(new_event, "tags")
     if timeline_id is None:
         return make_response(
             "URL '{url}' does not exists!".format(url=timeline_url), 201
         )
+    event_id = _search_in_sub_dicts(new_event, "event_id")
+    if event_id is None:
+        return _create_new_event(timeline_url=timeline_url, new_event=new_event)
+    else:
+        print("UPDATE MODE")
+        return _update_event(timeline_id, event_id, new_event)
+
+
+def _update_event(timeline_id, event_id, new_event):
+    _update_event_data(event_id, new_event)
+    _update_event_tags(timeline_id, event_id, event_data=new_event)
+    return make_response("Event has been updated", 200)
+
+
+def _update_event_data(event_id, event_data):
+    jwt_token = _search_in_sub_dicts(event_data, "jwt_token")
+    create_user = decrypt_auth_token(jwt_token)
+    header = event_data.get("header")
+    text = event_data.get("text")
+    link = event_data.get("link", None)
+    event_time = '{date} {hour}'.format(date=event_data.get("date"),
+                                        hour=event_data.get("hour", ""))
+    frame_color = event_data.get("frame_color", "rgb(33, 150, 243)")
+    icon = event_data.get("icon", "")
+    update_query = """
+    UPDATE events
+    SET 
+    header = ?,
+    text = ?,
+    link = ?,
+    event_time = ?,
+    frame_color = ?,
+    icon = ?, 
+    create_user = ?
+    WHERE event_id =  ?"""
+    APP_DB.run(query=update_query,
+               args=[
+                   header,
+                   text,
+                   link,
+                   event_time,
+                   frame_color,
+                   icon,
+                   create_user,
+                   event_id
+               ])
+
+
+def _update_event_tags(story_id, event_id, event_data):
+    """
+    deletes previous tags, updates new.
+    :param story_id:
+    :param event_id:
+    :param event_data:
+    :return:
+    """
+    # delete tags
+    # write new
+    delete_tags_query = """
+    DELETE
+    FROM events_tags
+    WHERE event_id = ?"""
+    APP_DB.run(query=delete_tags_query, args=[event_id])
+    tags = event_data.get("tags", [])
+    _add_tags(story_id, event_id, tags)
+
+
+def _create_new_event(timeline_url, new_event):
+    """
+    creates the new event and adds it to db
+    :param timeline_id:
+    :param event_id:
+    :param new_event:
+    :param jwt_token:
+    :return:
+    """
+    timeline_id = _get_id_by_url(url=timeline_url)
     event_id = str(uuid.uuid4())
     jwt_token = _search_in_sub_dicts(new_event, "jwt_token")
     _add_event_data(timeline_id=timeline_id, event_id=event_id, new_event=new_event, jwt_token=jwt_token)
+    tags = _search_in_sub_dicts(new_event, "tags")
     _add_tags(timeline_id, event_id, tags)
     return make_response("added new record to '{timeline_url}'!".format(timeline_url=timeline_url), 200)
 
 
 def _add_tags(timeline_id, event_id, tags):
-    # "EVENTS_TAGS": ['story_id', 'event_id', 'tag_id', 'insertion_time']
-    for tag in tags:
-        APP_DB.insert(table=TABLES_NAMES["EVENTS_TAGS"],
-                      columns=TABLES_COLUMNS["EVENTS_TAGS"],
-                      data=[timeline_id, event_id, tag, get_timestamp()]
-                      )
+    if type(tags) == list:
+        for tag in tags:
+            APP_DB.insert(table=TABLES_NAMES["EVENTS_TAGS"],
+                          columns=TABLES_COLUMNS["EVENTS_TAGS"],
+                          data=[timeline_id, event_id, tag, get_timestamp()]
+                          )
 
 
 def _add_event_data(timeline_id, event_id, new_event, jwt_token):

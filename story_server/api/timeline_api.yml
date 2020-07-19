@@ -192,22 +192,22 @@ paths:
                   type: string
                   description: main header of event.
                 text:
-                  type: string
+#                  type: string
                   description: event text.
                 date:
-                  type: string
+#                  type: string
                   description: the date the event accured.
                 hour:
-                  type: string
+#                  type: string
                   description: the hour the event accured.
                 link:
-                  type: string
+#                  type: string
                   description: additional link for more data for the event.
                 frame_color:
-                  type: string
+#                  type: string
                   description: color for icon and frame
                 icon:
-                  type: string
+#                  type: string
                   description: the icon for the timeline
                 tags:
                   type: array

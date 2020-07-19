@@ -351,9 +351,19 @@ def get_tags_by_timeline(timeline_url, **kargs):
     """
     story_id = _get_id_by_url(timeline_url)
     tag_query = """
-    SELECT tag_id, tag_name, tag_color
-      FROM story_tags
-      WHERE story_id = ?"""
+    with tags_counter AS (	
+SELECT tag_id, count(*) as counter
+FROM events_tags
+ GROUP BY tag_id)
+ SELECT s.tag_id, s.tag_name, s.tag_color, 
+ CASE 
+ WHEN c.counter is NULL THEN 0
+ ELSE c.counter
+ END AS counter
+   FROM story_tags s
+  LEFT OUTER JOIN tags_counter c
+  ON s.tag_id = c.tag_id
+      WHERE s.story_id = ?"""
     return APP_DB.query_to_json(tag_query, [story_id])
 
 

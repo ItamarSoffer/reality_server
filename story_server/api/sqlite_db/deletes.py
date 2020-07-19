@@ -31,6 +31,11 @@ def delete_timeline(timeline_id, **kargs):
                     FROM permissions
                     WHERE timeline_id = ?"""
         APP_DB.run(delete_permissions_query, [timeline_id])
+        delete_tags_query = """
+                            DELETE
+                            FROM story_tags
+                            WHERE story_id = ?"""
+        APP_DB.run(delete_permissions_query, [timeline_id])
 
         return make_response("Timeline and its events deleted successfully", 200)
 
@@ -53,6 +58,11 @@ def delete_event(event_id, **kargs):
         FROM events
         WHERE event_id = ?"""
         APP_DB.run(delete_query, [event_id])
+        delete_tags_query = """
+                DELETE
+                FROM events_tags
+                WHERE event_id = ?"""
+        APP_DB.run(delete_tags_query, [event_id])
         return make_response("Event deleted successfully", 200)
 
 

@@ -11,7 +11,7 @@ if MODE == "SQLITE":
     from .sqlite_db.gets import _clear_pass_files
     from .sqlite_db.gets import get_timelines_by_user
     from .sqlite_db.gets import import_xlsx_file
-    from .sqlite_db.gets import get_tags
+    from .sqlite_db.gets import get_tags_by_timeline
 
 if MODE == "MSSQL":
     from .mssql_db.gets import get_all_timelines
