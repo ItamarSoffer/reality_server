@@ -157,7 +157,8 @@ paths:
                   description: max time to fetch events
                 search_string:
                   description: string to search in events.
-
+                tags:
+                  description: string to search in events.
       responses:
         200:
           description: Successfully read timeline events from db.

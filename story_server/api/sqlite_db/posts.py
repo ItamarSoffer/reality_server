@@ -86,7 +86,7 @@ def add_event(timeline_url, new_event, **kargs):
         return make_response(
             "User {user} has no write permissions".format(user=user), 201
         )
-    
+
     event_id = _search_in_sub_dicts(new_event, "event_id")
     if event_id is None:
         return _create_new_event(timeline_url=timeline_url, new_event=new_event)
@@ -180,7 +180,6 @@ def _add_tags(timeline_id, event_id, tags):
                           data=[timeline_id, event_id, tag, get_timestamp()]
                           )
 
-
 def _add_event_data(timeline_id, event_id, new_event, jwt_token):
     """
     gets the timeline_id, event_id and the new event data.
@@ -227,6 +226,8 @@ def add_tag(timeline_url, **kargs):
     tag_name = _search_in_sub_dicts(kargs, "tag_name")
     tag_color = _search_in_sub_dicts(kargs, "tag_color")
     tag_id = str(uuid.uuid4())
+    if ',' in tag_name:
+        return make_response("No comma in tags.", 201)
 
     # "STORY_TAGS": ['story_id', 'tag_id', 'tag_name', 'tag_color', 'create_time'],
     APP_DB.insert(table=TABLES_NAMES["STORY_TAGS"],

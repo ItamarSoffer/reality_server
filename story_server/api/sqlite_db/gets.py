@@ -114,17 +114,20 @@ def get_timeline(timeline_url, **kargs):
     min_time = _search_in_sub_dicts(kargs, "min_time")
     max_time = _search_in_sub_dicts(kargs, "max_time")
     search_string = _search_in_sub_dicts(kargs, "search_string")
+    tags = _search_in_sub_dicts(kargs, "tags")
+
+    min_time_string = ''
+    max_time_string = ''
+    search_string_query = ''
+    events_tags_string_query = ''
+
     if min_time:
         min_time_string = "AND event_time >= ?"
         args.append(min_time)
-    else:
-        min_time_string = ''
 
     if max_time:
         max_time_string = "AND event_time <= ?"
         args.append(max_time)
-    else:
-        max_time_string = ''
 
     if search_string:
         search_string_query = \
@@ -133,8 +136,14 @@ def get_timeline(timeline_url, **kargs):
             OR link LIKE '%{search_string}%')
             """\
             .format(search_string=search_string)
-    else:
-        search_string_query = ''
+
+    if tags:
+        relevant_event_ids = _get_events_by_tags(timeline_id, tags)
+        events_tags_string_query = \
+            """AND (event_id in ({events_place}))
+            """ \
+                .format(events_place=",".join(["?" for val in relevant_event_ids]))
+        args += relevant_event_ids
 
     get_timeline_query = """
     SELECT *
@@ -143,10 +152,14 @@ def get_timeline(timeline_url, **kargs):
 	 {min_time_string}
 	 {max_time_string}
 	 {search_string_query}
+	 {events_tags_string_query}
      ORDER BY event_time DESC """\
         .format(min_time_string=min_time_string,
                 max_time_string=max_time_string,
-                search_string_query=search_string_query)
+                search_string_query=search_string_query,
+                events_tags_string_query=events_tags_string_query)
+    print(get_timeline_query)
+    print(args)
     results = APP_DB.query_to_json(query_string=get_timeline_query, args=args)
     if results is None:
         return make_response("Query Error!", 500)
@@ -158,6 +171,27 @@ def get_timeline(timeline_url, **kargs):
         end = time.perf_counter()
         print("took: {} seconds".format(end-start))
         return {"events": results}
+
+
+def _get_events_by_tags(story_id, tags):
+    """
+    return all event_id that has the one of the tags in them.
+    :param story_id:
+    :param tags:
+    :return:
+    """
+    tags_query = """
+    SELECT DISTINCT event_id
+    FROM story_tags s 
+    INNER JOIN events_tags t
+    ON s.tag_id = t.tag_id
+    WHERE s.story_id = ? 
+	AND tag_name in ({tags_args})
+  """.format(
+        tags_args=",".join(["?" for val in tags])
+    )
+    results = APP_DB.query(query_string=tags_query, args=[story_id, *tags], return_headers=False)
+    return [val[0] for val in results]
 
 
 @check_jwt
