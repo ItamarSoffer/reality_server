@@ -1,7 +1,7 @@
 import uuid
 from flask import make_response
 from ..__main__ import APP_DB
-from .gets import _get_id_by_url, _is_url_exists
+from .gets import _get_id_by_url, _is_url_exists, _add_tags, _is_tag_exists
 from ...server_utils.time_functions import get_timestamp
 from ...server_utils.consts import (
     TABLES_COLUMNS,
@@ -172,14 +172,6 @@ def _create_new_event(timeline_url, new_event):
     return make_response("added new record to '{timeline_url}'!".format(timeline_url=timeline_url), 200)
 
 
-def _add_tags(timeline_id, event_id, tags):
-    if type(tags) == list:
-        for tag in tags:
-            APP_DB.insert(table=TABLES_NAMES["EVENTS_TAGS"],
-                          columns=TABLES_COLUMNS["EVENTS_TAGS"],
-                          data=[timeline_id, event_id, tag, get_timestamp()]
-                          )
-
 def _add_event_data(timeline_id, event_id, new_event, jwt_token):
     """
     gets the timeline_id, event_id and the new event data.
@@ -218,12 +210,13 @@ def _add_event_data(timeline_id, event_id, new_event, jwt_token):
     print("inserted data")
 
 
-
 @check_jwt
 def add_tag(timeline_url, **kargs):
     # check the user permissions
     story_id = _get_id_by_url(timeline_url)
     tag_name = _search_in_sub_dicts(kargs, "tag_name")
+    if _is_tag_exists(story_id, tag_name):
+        return make_response("Tag exists", 201)
     tag_color = _search_in_sub_dicts(kargs, "tag_color")
     tag_id = str(uuid.uuid4())
     if ',' in tag_name:

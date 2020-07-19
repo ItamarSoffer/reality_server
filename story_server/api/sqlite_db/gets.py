@@ -12,9 +12,12 @@ from story_server.server_utils.consts import (
 )
 import uuid
 from ...server_utils.time_functions import get_timestamp
-
+# from .posts import _add_tags
 from ..jwt_functions import check_jwt, _search_in_sub_dicts, decrypt_auth_token
 
+TAGS_COLORS = ['#f5222d', '#fa541c', '#fa8c16', '#faad14', '#fadb14',
+               '#a0d911', '#52c41a', '#13c2c2', '#40a9ff', '#2f54eb',
+               '#722ed1', '#eb2f96',  "#808080", '#000000']
 
 
 @check_jwt
@@ -158,18 +161,16 @@ def get_timeline(timeline_url, **kargs):
                 max_time_string=max_time_string,
                 search_string_query=search_string_query,
                 events_tags_string_query=events_tags_string_query)
-    print(get_timeline_query)
-    print(args)
     results = APP_DB.query_to_json(query_string=get_timeline_query, args=args)
     if results is None:
         return make_response("Query Error!", 500)
     else:
         import time
-        start = time.perf_counter()
+        # start = time.perf_counter()
         for line in results:
             line['tags'] = get_tags_by_event(line['event_id'])
         end = time.perf_counter()
-        print("took: {} seconds".format(end-start))
+        # print("took: {} seconds".format(end-start))
         return {"events": results}
 
 
@@ -228,7 +229,7 @@ def import_xlsx_file(timeline_url, **kwargs):
     xlsx_data = pd.concat(pd.read_excel(output_file, sheet_name=None), ignore_index=True)
     columns = xlsx_data.columns.tolist()
     print(columns)
-    valid_column_names = ["title", "content", "link", "event_time", "color", "icon"]
+    valid_column_names = ["title", "content", "link", "event_time", "color", "icon", "create_user", "tags"]
     if 'title' not in columns:
         print("missing title field")
         return make_response({"code": 201, 'message': "missing title field"}, 201)
@@ -243,6 +244,9 @@ def import_xlsx_file(timeline_url, **kwargs):
         for index in range(len(xlsx_data)):
             event_id = str(uuid.uuid4())
             line = xlsx_data.iloc[index]
+
+            tags = _extract_field_from_df_line(line, "tags", None)
+            # move to another function.
             header = _extract_field_from_df_line(line, "title")
             text = _extract_field_from_df_line(line, "content", '')
             link = _extract_field_from_df_line(line, "link", None)
@@ -267,10 +271,29 @@ def import_xlsx_file(timeline_url, **kwargs):
                     create_user,
                 ],
             )
+            _insert_tags_from_xlsx(timeline_id, event_id, tags)
         return make_response({"status": 'done',
                               "code": 200,
                               "message": "Added {} new events to timeline".format(len(xlsx_data))},
                              200)
+
+
+def _insert_tags_from_xlsx(timeline_id, event_id, tags):
+    """
+    for each tag:
+    checks by name if it exists,
+    if yes- inserts to the events_tags table.
+    if not -creates in the story_tags, and then inserts to events_tags
+    :param timeline_id:
+    :param event_id:
+    :param tags:
+    :return:
+    """
+    tags = tags.split(",")
+    for tag_name in tags:
+        if len(tag_name) > 0:
+            tag_id = _get_tag_by_story(timeline_id, tag_name.strip())
+            _add_tags(timeline_id, event_id, [tag_id])
 
 
 def _extract_field_from_df_line(line, field, default_val=None):
@@ -297,18 +320,19 @@ def _create_timeline_xlsx(timeline_url):
     """
 
     events_query = """
-    SELECT name, header as 'title', text as 'content', link, event_time, icon, frame_color as 'color', insertion_time, e.create_user
-FROM events e
- INNER JOIN timeline_ids t
- ON (e.timeline_id = t.id)
- WHERE url = ?"""
+    SELECT name, header as 'title', text as 'content', link, event_time, icon, 
+    frame_color as 'color', insertion_time, e.create_user
+    FROM events e
+    INNER JOIN timeline_ids t
+    ON (e.timeline_id = t.id)
+    WHERE url = ?"""
 
     timeline_data_query = """
     SELECT name, url, description, create_time, create_user
     FROM timeline_ids
     WHERE url = ?
     """
-
+    # TODO: join on the event_id, with XML CONCAT for the tags.
     timeline_events_df = APP_DB.query_to_df(
         query_string=events_query, args=[timeline_url]
     )
@@ -326,7 +350,7 @@ FROM events e
     timeline_events_df.to_excel(
         writer, sheet_name="{timeline_url}_events".format(timeline_url=timeline_url), index=False
     )
-    timeline_data_df.to_excel(writer, sheet_name="Timeline_Data", index=False)
+    # timeline_data_df.to_excel(writer, sheet_name="Timeline_Data", index=False)
 
     writer.save()
     return xlsx_path
@@ -375,6 +399,7 @@ def _is_url_exists(url):
     return APP_DB.query_to_json(url_query_check, [url])
 
 
+
 @check_jwt
 def get_tags_by_timeline(timeline_url, **kargs):
     """
@@ -410,3 +435,53 @@ def get_tags_by_event(event_id, **kargs):
    WHERE e.event_id = ?
           """
     return APP_DB.query_to_json(tag_query, [event_id])
+
+
+def _get_tag_by_story(story_id, tag_name):
+    """
+    checks by name if tag exists,
+    if yes- inserts to the events_tags table.
+    if not -creates in the story_tags, and then inserts to events_tags
+    :param story_id:
+    :param tag_name:
+    :return:
+    """
+    tag_exists = _is_tag_exists(story_id, tag_name)
+
+    if tag_exists:
+        return tag_exists
+    else:
+        from random import randint
+        tag_color = TAGS_COLORS[randint(0, len(TAGS_COLORS) - 1)]
+        tag_id = str(uuid.uuid4())
+        APP_DB.insert(table=TABLES_NAMES["STORY_TAGS"],
+                      columns=TABLES_COLUMNS["STORY_TAGS"],
+                      data=[story_id,
+                            tag_id,
+                            tag_name,
+                            tag_color,
+                            get_timestamp()
+                            ])
+        return tag_id
+
+
+def _is_tag_exists(story_id, tag_name):
+    q = """
+        SELECT *
+          FROM story_tags
+          WHERE story_id = ? and tag_name = ?"""
+    result = APP_DB.query_to_json(q, [story_id, tag_name])
+    if result:
+        return result[0]['tag_id']
+    else:
+        return None
+
+
+def _add_tags(timeline_id, event_id, tags):
+    if type(tags) == list:
+        for tag_id in tags:
+            APP_DB.insert(table=TABLES_NAMES["EVENTS_TAGS"],
+                          columns=TABLES_COLUMNS["EVENTS_TAGS"],
+                          data=[timeline_id, event_id, tag_id, get_timestamp()]
+                          )
+
