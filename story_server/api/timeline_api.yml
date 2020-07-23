@@ -54,6 +54,12 @@ paths:
           schema:
             allOf:
             - $ref: '#/definitions/JwtAuth'
+            - type: object
+              properties:
+                search_string:
+                  description: string to search
+              additionalProperties:
+                type: string
 
       responses:
         200:

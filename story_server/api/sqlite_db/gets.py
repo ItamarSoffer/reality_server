@@ -26,6 +26,14 @@ def get_all_timelines(num=None, **kargs):
     returns all the data from the timeline_ids table, for the main cards view.
     :return:
     """
+    search_string = _search_in_sub_dicts(kargs, search_key="search_string")
+    search_string_query = ''
+    if search_string is not None:
+        search_string_query = \
+            """WHERE (name LIKE '%{search_string}%'
+            OR description LIKE '%{search_string}%')
+            """\
+            .format(search_string=search_string)
     timelines_query = """
     WITH event_counter AS 
     (
@@ -37,8 +45,10 @@ def get_all_timelines(num=None, **kargs):
       FROM timeline_ids t
       LEFT OUTER JOIN event_counter e
       ON t.id = e.timeline_id
+      {search_string_query}
       ORDER BY create_time DESC
-    """
+    """.format(search_string_query=search_string_query)
+    
     if num is None:
         results = APP_DB.query_to_json(timelines_query)
     else:
