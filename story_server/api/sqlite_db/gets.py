@@ -48,7 +48,7 @@ def get_all_timelines(num=None, **kargs):
       {search_string_query}
       ORDER BY create_time DESC
     """.format(search_string_query=search_string_query)
-    
+
     if num is None:
         results = APP_DB.query_to_json(timelines_query)
     else:
@@ -68,6 +68,16 @@ def get_timelines_by_user(num=None, **kargs):
     """
     jwt_token = _search_in_sub_dicts(kargs, "jwt_token")
     username = decrypt_auth_token(jwt_token)
+
+    search_string = _search_in_sub_dicts(kargs, search_key="search_string")
+    search_string_query = ''
+    if search_string is not None:
+        search_string_query = \
+            """AND(name LIKE '%{search_string}%'
+            OR description LIKE '%{search_string}%')
+            """\
+            .format(search_string=search_string)
+
     timelines_query = """
         WITH event_counter AS 
     (
@@ -82,7 +92,8 @@ SELECT id, url, username, role , t.description, t.name, t.create_user, e.counter
   LEFT OUTER JOIN event_counter e 
   ON t.id = e.timeline_id
   WHERE username = ? and role != 'none'
-    """
+  {search_string_query}
+    """.format(search_string_query=search_string_query)
     if num is None:
         results = APP_DB.query_to_json(timelines_query, [username])
     else:
