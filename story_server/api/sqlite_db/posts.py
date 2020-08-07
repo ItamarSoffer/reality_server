@@ -111,6 +111,7 @@ def _update_event_data(event_id, event_data):
                                         hour=event_data.get("hour", ""))
     frame_color = event_data.get("frame_color", "rgb(33, 150, 243)")
     icon = event_data.get("icon", "")
+    modify_time = get_timestamp()
     update_query = """
     UPDATE events
     SET 
@@ -120,7 +121,8 @@ def _update_event_data(event_id, event_data):
     event_time = ?,
     frame_color = ?,
     icon = ?, 
-    create_user = ?
+    create_user = ?,
+    modify_time = ?
     WHERE event_id =  ?"""
     APP_DB.run(query=update_query,
                args=[
@@ -131,6 +133,7 @@ def _update_event_data(event_id, event_data):
                    frame_color,
                    icon,
                    create_user,
+                   modify_time,
                    event_id
                ])
 
@@ -196,6 +199,7 @@ def _add_event_data(timeline_id, event_id, new_event, jwt_token):
     frame_color = new_event.get("frame_color", "rgb(33, 150, 243)")
     icon = new_event.get("icon", "")
     insertion_time = get_timestamp()
+    modify_time = get_timestamp()
     create_user = decrypt_auth_token(jwt_token)
     APP_DB.insert(
         table=TABLES_NAMES["EVENTS"],
@@ -211,6 +215,7 @@ def _add_event_data(timeline_id, event_id, new_event, jwt_token):
             icon,
             insertion_time,
             create_user,
+            modify_time
         ],
     )
     print("inserted data")

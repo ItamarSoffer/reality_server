@@ -25,6 +25,7 @@ TABLES_COLUMNS = {
         "icon",
         "insertion_time",
         "create_user",
+        "modify_time"
     ],
     "CONNECTIONS": ["user", "connection_time"],
     "PERMISSIONS": ["timeline_id", "timeline_url", "username", "role", "insertion_time"],
