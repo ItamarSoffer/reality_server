@@ -37,11 +37,15 @@ def get_all_timelines(num=None, **kargs):
     timelines_query = """
     WITH event_counter AS 
     (
-    SELECT timeline_id, count(*) as counter
+    SELECT timeline_id, count(*) as counter, max(modify_time) AS max_modify
       FROM events
      GROUP BY timeline_id
       )
-      SELECT t.*, counter
+      SELECT t.*, counter,
+          CASE
+    WHEN max_modify IS NOT NULL THEN max_modify
+    ELSE t.create_time
+    END AS last_modify
       FROM timeline_ids t
       LEFT OUTER JOIN event_counter e
       ON t.id = e.timeline_id
@@ -57,6 +61,14 @@ def get_all_timelines(num=None, **kargs):
     if results is None:
         return make_response("Query Error!", 500)
     else:
+        for line in results:
+            q = """
+            SELECT display_name 
+            FROM users 
+            WHERE username = ?"""
+            full_name = APP_DB.query_to_json(query_string=q, args=[line['create_user']])[0]['display_name']
+            line['create_user'] = full_name
+            # line['last_modify'] = line['last_modify'].strftime("%Y%m%d-%H%M%S")
         return results
 
 
@@ -81,11 +93,15 @@ def get_timelines_by_user(num=None, **kargs):
     timelines_query = """
         WITH event_counter AS 
     (
-    SELECT timeline_id, count(*) as counter
+    SELECT timeline_id, count(*) as counter, max(modify_time) AS max_modify
       FROM events
      GROUP BY timeline_id
       )
-SELECT id, url, username, role , t.description, t.name, t.create_user, e.counter
+SELECT id, url, username, role , t.description, t.name, t.create_user, e.counter,
+    CASE
+    WHEN max_modify IS NOT NULL THEN max_modify
+    ELSE t.create_time
+    END AS last_modify
   FROM permissions p
   INNER JOIN  timeline_ids t
   ON t.id = p.timeline_id
@@ -102,6 +118,14 @@ SELECT id, url, username, role , t.description, t.name, t.create_user, e.counter
     if results is None:
         return make_response("Query Error!", 500)
     else:
+        for line in results:
+            q = """
+            SELECT display_name 
+            FROM users 
+            WHERE username = ?"""
+            full_name = APP_DB.query_to_json(query_string=q, args=[line['create_user']])[0]['display_name']
+            line['create_user'] = full_name
+            # line['last_modify'] = line['last_modify'].strftime("%Y%m%d-%H%M%S")
         return results
 
 
@@ -190,6 +214,7 @@ def get_timeline(timeline_url, **kargs):
         # start = time.perf_counter()
         for line in results:
             line['tags'] = get_tags_by_event(line['event_id'])
+            # line['event_time'] = line['event_time'].strftime("%Y%m%d-%H%M%S")
         end = time.perf_counter()
         # print("took: {} seconds".format(end-start))
         return {"events": results}
@@ -490,8 +515,8 @@ def _is_tag_exists(story_id, tag_name):
     q = """
         SELECT *
           FROM story_tags
-          WHERE story_id = ? and tag_name = ?"""
-    result = APP_DB.query_to_json(q, [story_id, tag_name])
+          WHERE story_id = ? and (tag_name = ? OR tag_id = ?)"""
+    result = APP_DB.query_to_json(q, [story_id, tag_name, tag_name])
     if result:
         return result[0]['tag_id']
     else:

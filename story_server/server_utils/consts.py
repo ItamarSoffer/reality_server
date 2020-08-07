@@ -54,6 +54,7 @@ NUMS = [str(i) for i in range(0, 10)]
 
 ALLOWED_CHARS = SMALL_ABC + CAPITAL_ABC + NUMS + ["_", "-", "(", ")"]
 
+
 DB_PATH = r"C:\Scripts\Story\server\sqlite_db\timeline.db"
 
 SYSTEM_NAME = "STORY"

@@ -1,7 +1,7 @@
 import uuid
 from flask import make_response
 from ..__main__ import APP_DB
-from .gets import _get_id_by_url, _is_url_exists, _add_tags, _is_tag_exists
+from .gets import _get_id_by_url, _is_url_exists, _add_tags, _is_tag_exists, _get_tag_by_story
 from ...server_utils.time_functions import get_timestamp
 from ...server_utils.consts import (
     TABLES_COLUMNS,
@@ -151,7 +151,10 @@ def _update_event_tags(story_id, event_id, event_data):
     WHERE event_id = ?"""
     APP_DB.run(query=delete_tags_query, args=[event_id])
     tags = event_data.get("tags", [])
-    _add_tags(story_id, event_id, tags)
+    tags_ids = []
+    for tag_name in tags:
+        tags_ids.append(_get_tag_by_story(story_id, tag_name))
+    _add_tags(story_id, event_id, tags_ids)
 
 
 def _create_new_event(timeline_url, new_event):
@@ -168,6 +171,9 @@ def _create_new_event(timeline_url, new_event):
     jwt_token = _search_in_sub_dicts(new_event, "jwt_token")
     _add_event_data(timeline_id=timeline_id, event_id=event_id, new_event=new_event, jwt_token=jwt_token)
     tags = _search_in_sub_dicts(new_event, "tags")
+    tags_ids = []
+    for tag_name in tags:
+        tags_ids.append(_get_tag_by_story(timeline_id, tag_name))
     _add_tags(timeline_id, event_id, tags)
     return make_response("added new record to '{timeline_url}'!".format(timeline_url=timeline_url), 200)
 

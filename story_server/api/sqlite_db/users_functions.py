@@ -19,15 +19,16 @@ PERMISSION_POWER = {
 }
 
 
-def login(username, password):
+def login(credentials):
     """
     checks if the username and password matches and can connect to system.
     returns 200 if success and 404 if not (no permissions or wrong password)
     in the UNIT, this will change to the LDAP authentication.
-    :param username: string
-    :param password: string
+    :param credentials: string
     :return:
     """
+    username = _search_in_sub_dicts(credentials, "username")
+    password = _search_in_sub_dicts(credentials, "password")
     users_query = """
     SELECT *
     FROM users 
@@ -191,8 +192,8 @@ def set_permissions(timeline_url, permissions_data, **kargs):
     elif not (_user_has_story_permissions(username) or username == 'public'):
         return make_response("User '{user}' has no permissions to Story!".format(user=username), 201)
     # never will be because the jwt auth.
-    elif not _user_has_story_permissions(adding_user):
-        return make_response("User '{user}' has no permissions to Story!".format(user=adding_user), 201)
+    # elif not _user_has_story_permissions(adding_user):
+    #     return make_response("User '{user}' has no permissions to Story!".format(user=adding_user), 201)
     # checks he doesnt messes the permissions:
     elif _check_permissions(timeline_url, username, return_level=True) == PERMISSION_POWER['creator']:
         return make_response("Do not mess with the creator's permissions.", 201)

@@ -1,7 +1,8 @@
 from flask import make_response
 from ..__main__ import APP_DB
 from ..jwt_functions import check_jwt, decrypt_auth_token, _search_in_sub_dicts
-from .users_functions import PERMISSION_POWER
+from .users_functions import PERMISSION_POWER, _check_permissions
+from .gets import _get_id_by_url
 
 @check_jwt
 def delete_timeline(timeline_id, **kargs):
@@ -82,3 +83,31 @@ def _check_permission_by_timeline_id(event_id, username):
     FROM permissions p  
      WHERE username =? and timeline_id = ?"""
     return APP_DB.query(query, [username, event_id], return_headers=False)
+
+
+@check_jwt
+def del_tag(timeline_url, tags_data):
+    """
+    deletes the tag from timeline and from all the events
+    :param timeline_url:
+    :param tags_data:
+    :return:
+    """
+    jwt_token = _search_in_sub_dicts(tags_data, "jwt_token")
+    user = decrypt_auth_token(jwt_token)
+    if _check_permissions(timeline_url, user, return_level=True) < PERMISSION_POWER['write']:
+        return make_response("User cant edit this story!", 201)
+    else:
+        tag_id = _search_in_sub_dicts(tags_data, "tag_id")
+        story_id = _get_id_by_url(timeline_url)
+        del_tag_events_query = """
+        DELETE
+        FROM events_tags
+        WHERE story_id = ? AND tag_id = ?"""
+        del_tag_story_query = """
+        DELETE
+        FROM story_tags
+         WHERE story_id = ? AND tag_id = ?"""
+        APP_DB.run(del_tag_events_query, [story_id, tag_id])
+        APP_DB.run(del_tag_story_query, [story_id, tag_id])
+        return make_response("Tag Deleted", 200)
