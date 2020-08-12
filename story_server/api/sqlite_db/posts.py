@@ -177,7 +177,7 @@ def _create_new_event(timeline_url, new_event):
     tags_ids = []
     for tag_name in tags:
         tags_ids.append(_get_tag_by_story(timeline_id, tag_name))
-    _add_tags(timeline_id, event_id, tags)
+    _add_tags(timeline_id, event_id, tags_ids)
     return make_response("added new record to '{timeline_url}'!".format(timeline_url=timeline_url), 200)
 
 
