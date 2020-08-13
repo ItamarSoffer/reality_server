@@ -5,7 +5,7 @@ from ...server_utils.consts import (
     TABLES_NAMES,
 )
 from ...server_utils.time_functions import get_timestamp
-from .gets import _get_id_by_url, _is_url_exists
+from .utils import _get_id_by_url, _is_url_exists
 
 from ..jwt_functions import generate_auth_token, check_jwt, _search_in_sub_dicts, decrypt_auth_token
 

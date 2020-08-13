@@ -1,57 +1,15 @@
 import uuid
 from flask import make_response
 from ..__main__ import APP_DB
-from .gets import _get_id_by_url, _is_url_exists, _add_tags, _is_tag_exists, _get_tag_by_story
 from ...server_utils.time_functions import get_timestamp
 from ...server_utils.consts import (
     TABLES_COLUMNS,
     TABLES_NAMES,
-    RESERVED_TIMELINE_NAMES,
-    ALLOWED_CHARS,
 )
-from .users_functions import _add_permissions, _check_permissions, PERMISSION_POWER
+from .users_functions import  _check_permissions, PERMISSION_POWER
 from ..jwt_functions import check_jwt, decrypt_auth_token, _search_in_sub_dicts
-
-
-@check_jwt
-def create_timeline(new_timeline, **kargs):
-    """
-    creates a new timeline.
-    makes sure that the url is not already taken
-    :param new_timeline:
-    :return:
-    """
-    name = new_timeline.get("name", None)
-    url = new_timeline.get("url", None)
-    description = new_timeline.get("description", None)
-
-    jwt_token = _search_in_sub_dicts(new_timeline, "jwt_token")
-    create_user = decrypt_auth_token(jwt_token)
-    if _is_url_exists(url):
-        return make_response(
-            "Requested URL: {url} already exists!".format(url=url), 201
-        )
-    elif not _check_allowed_chars(url, ALLOWED_CHARS):
-        return make_response(
-            "The name has invalid characters."
-            + " Enter letters, numbers, hyphens or brackets.",
-            201,
-        )
-    elif url.lower() in RESERVED_TIMELINE_NAMES:
-        return make_response("Illegal url! Please select another", 201)
-    create_time = get_timestamp()
-    # uniq id:
-    timeline_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, url))
-    # insert record
-    APP_DB.insert(
-        table=TABLES_NAMES["TIMELINE_IDS"],
-        columns=TABLES_COLUMNS["TIMELINE_IDS"],
-        data=[name, timeline_id, url, description, create_time, create_user],
-    )
-    _add_permissions(timeline_url=url,
-                     username=create_user,
-                     role="creator")
-    return make_response("new Timeline '{name}' created!".format(name=name), 200)
+from .utils import _get_id_by_url
+from .tags import _get_tag_by_story, _add_tags
 
 
 @check_jwt
@@ -222,35 +180,37 @@ def _add_event_data(timeline_id, event_id, new_event, jwt_token):
 
 
 @check_jwt
-def add_tag(timeline_url, **kargs):
-    # check the user permissions
-    story_id = _get_id_by_url(timeline_url)
-    tag_name = _search_in_sub_dicts(kargs, "tag_name")
-    if _is_tag_exists(story_id, tag_name):
-        return make_response("Tag exists", 201)
-    tag_color = _search_in_sub_dicts(kargs, "tag_color")
-    tag_id = str(uuid.uuid4())
-    if ',' in tag_name:
-        return make_response("No comma in tags.", 201)
+def delete_event(event_id, **kargs):
+    jwt_token = _search_in_sub_dicts(kargs, "jwt_token")
+    username = decrypt_auth_token(jwt_token)
 
-    # "STORY_TAGS": ['story_id', 'tag_id', 'tag_name', 'tag_color', 'create_time'],
-    APP_DB.insert(table=TABLES_NAMES["STORY_TAGS"],
-                  columns=TABLES_COLUMNS["STORY_TAGS"],
-                  data=[story_id,
-                        tag_id,
-                        tag_name,
-                        tag_color,
-                        get_timestamp()
-                        ])
-    return make_response("created new tag", 200)
+    role = _check_permission_by_event(event_id, username)
+    if not role:
+        return make_response("User has no permissions or wrong event ID", 201)
+
+    role = role[0][0]
+    if PERMISSION_POWER[role] < PERMISSION_POWER['write']:
+        return make_response("User doesnt have permissions to delete events!", 201)
+    else:
+        delete_query = """
+        DELETE
+        FROM events
+        WHERE event_id = ?"""
+        APP_DB.run(delete_query, [event_id])
+        delete_tags_query = """
+                DELETE
+                FROM events_tags
+                WHERE event_id = ?"""
+        APP_DB.run(delete_tags_query, [event_id])
+        return make_response("Event deleted successfully", 200)
 
 
-def _check_allowed_chars(string, allowed_chars):
-    """
-    checks if all chars in string are in allowed_chars list
-    :param string: string to check
-    :param allowed_chars: list of allowed chars
-    :return: bool
-    """
-    is_cleared = [c in allowed_chars for c in string]
-    return all(is_cleared)
+def _check_permission_by_event(event_id, username):
+    query = """
+    SELECT DISTINCT role
+  FROM permissions p 
+  INNER JOIN events e
+   ON p.timeline_id = e.timeline_id 
+   WHERE username =? and event_id = ?"""
+    return APP_DB.query(query, [username, event_id], return_headers=False)
+

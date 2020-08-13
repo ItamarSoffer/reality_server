@@ -1,0 +1,306 @@
+import uuid
+from flask import make_response
+from ..__main__ import APP_DB
+from ...server_utils.time_functions import get_timestamp
+from ...server_utils.consts import (
+    TABLES_COLUMNS,
+    TABLES_NAMES,
+    RESERVED_TIMELINE_NAMES,
+    ALLOWED_CHARS,
+)
+from .users_functions import _add_permissions, PERMISSION_POWER
+from ..jwt_functions import check_jwt, decrypt_auth_token, _search_in_sub_dicts
+from .utils import _get_id_by_url, _is_url_exists, _check_allowed_chars
+from .tags import _get_events_by_tags, get_tags_by_event
+
+# ############### CREATES ###############
+@check_jwt
+def create_timeline(new_timeline, **kargs):
+    """
+        creates a new timeline.
+        makes sure that the url is not already taken
+        :param new_timeline:
+        :return:
+        """
+    name = new_timeline.get("name", None)
+    url = new_timeline.get("url", None)
+    description = new_timeline.get("description", None)
+
+    jwt_token = _search_in_sub_dicts(new_timeline, "jwt_token")
+    create_user = decrypt_auth_token(jwt_token)
+    if _is_url_exists(url):
+        return make_response(
+            "Requested URL: {url} already exists!".format(url=url), 201
+        )
+    elif not _check_allowed_chars(url, ALLOWED_CHARS):
+        return make_response(
+            "The name has invalid characters."
+            + " Enter letters, numbers, hyphens or brackets.",
+            201,
+            )
+    elif url.lower() in RESERVED_TIMELINE_NAMES:
+        return make_response("Illegal url! Please select another", 201)
+    create_time = get_timestamp()
+    # uniq id:
+    timeline_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, url))
+    # insert record
+    APP_DB.insert(
+        table=TABLES_NAMES["TIMELINE_IDS"],
+        columns=TABLES_COLUMNS["TIMELINE_IDS"],
+        data=[name, timeline_id, url, description, create_time, create_user],
+    )
+    _add_permissions(timeline_url=url,
+                     username=create_user,
+                     role="creator")
+    return make_response("new Timeline '{name}' created!".format(name=name), 200)
+
+
+# ############### GETS ###############
+
+
+@check_jwt
+def get_all_timelines(num=None, **kargs):
+    """
+    returns all the data from the timeline_ids table, for the main cards view.
+    :return:
+    """
+    search_string = _search_in_sub_dicts(kargs, search_key="search_string")
+    search_string_query = ''
+    if search_string is not None:
+        search_string_query = \
+            """WHERE (name LIKE '%{search_string}%'
+            OR description LIKE '%{search_string}%')
+            """\
+            .format(search_string=search_string)
+    timelines_query = """
+    WITH event_counter AS 
+    (
+    SELECT timeline_id, count(*) as counter, max(modify_time) AS max_modify
+      FROM events
+     GROUP BY timeline_id
+      )
+      SELECT t.*, counter,
+          CASE
+    WHEN max_modify IS NOT NULL THEN max_modify
+    ELSE t.create_time
+    END AS last_modify
+      FROM timeline_ids t
+      LEFT OUTER JOIN event_counter e
+      ON t.id = e.timeline_id
+      {search_string_query}
+      ORDER BY create_time DESC
+    """.format(search_string_query=search_string_query)
+
+    if num is None:
+        results = APP_DB.query_to_json(timelines_query)
+    else:
+        timelines_query += " LIMIT ?"
+        results = APP_DB.query_to_json(timelines_query, [num])
+    if results is None:
+        return make_response("Query Error!", 500)
+    else:
+        for line in results:
+            q = """
+            SELECT display_name 
+            FROM users 
+            WHERE username = ?"""
+            full_name = APP_DB.query_to_json(query_string=q, args=[line['create_user']])[0]['display_name']
+            line['create_user'] = full_name
+            # line['last_modify'] = line['last_modify'].strftime("%Y%m%d-%H%M%S")
+        return results
+
+
+@check_jwt
+def get_timelines_by_user(num=None, **kargs):
+    """
+    returns all the timelines a specific user can access
+    :return:
+    """
+    jwt_token = _search_in_sub_dicts(kargs, "jwt_token")
+    username = decrypt_auth_token(jwt_token)
+
+    search_string = _search_in_sub_dicts(kargs, search_key="search_string")
+    search_string_query = ''
+    if search_string is not None:
+        search_string_query = \
+            """AND(name LIKE '%{search_string}%'
+            OR description LIKE '%{search_string}%')
+            """\
+            .format(search_string=search_string)
+
+    timelines_query = """
+        WITH event_counter AS 
+    (
+    SELECT timeline_id, count(*) as counter, max(modify_time) AS max_modify
+      FROM events
+     GROUP BY timeline_id
+      )
+SELECT id, url, username, role , t.description, t.name, t.create_user, e.counter,
+    CASE
+    WHEN max_modify IS NOT NULL THEN max_modify
+    ELSE t.create_time
+    END AS last_modify
+  FROM permissions p
+  INNER JOIN  timeline_ids t
+  ON t.id = p.timeline_id
+  LEFT OUTER JOIN event_counter e 
+  ON t.id = e.timeline_id
+  WHERE username = ? and role != 'none'
+  {search_string_query}
+    """.format(search_string_query=search_string_query)
+    if num is None:
+        results = APP_DB.query_to_json(timelines_query, [username])
+    else:
+        timelines_query += " LIMIT ?"
+        results = APP_DB.query_to_json(timelines_query, [num])
+    if results is None:
+        return make_response("Query Error!", 500)
+    else:
+        for line in results:
+            q = """
+            SELECT display_name 
+            FROM users 
+            WHERE username = ?"""
+            full_name = APP_DB.query_to_json(query_string=q, args=[line['create_user']])[0]['display_name']
+            line['create_user'] = full_name
+            # line['last_modify'] = line['last_modify'].strftime("%Y%m%d-%H%M%S")
+        return results
+
+
+@check_jwt
+def get_timeline_basic_data(timeline_url, **kargs):
+    """
+    returns the basic timeline data.
+    :param timeline_url:
+    :return:
+    """
+    data_query = """
+    SELECT *
+      FROM timeline_ids
+      WHERE url = ? """
+    results = APP_DB.query_to_json(query_string=data_query, args=[timeline_url])
+    return results
+
+
+@check_jwt
+def get_timeline(timeline_url, **kargs):
+    """
+    returns all the events data of a timeline
+    each event data is a json.dumps
+    :param timeline_url:
+    :return:
+    """
+    timeline_id = _get_id_by_url(url=timeline_url)
+    if timeline_id is None:
+        return make_response(
+            "URL '{url}' does not exists!".format(url=timeline_url), 404
+        )
+    args = [timeline_id]
+
+    min_time = _search_in_sub_dicts(kargs, "min_time")
+    max_time = _search_in_sub_dicts(kargs, "max_time")
+    search_string = _search_in_sub_dicts(kargs, "search_string")
+    tags = _search_in_sub_dicts(kargs, "tags")
+
+    min_time_string = ''
+    max_time_string = ''
+    search_string_query = ''
+    events_tags_string_query = ''
+
+    if min_time:
+        min_time_string = "AND event_time >= ?"
+        args.append(min_time)
+
+    if max_time:
+        max_time_string = "AND event_time <= ?"
+        args.append(max_time)
+
+    if search_string:
+        search_string_query = \
+            """AND (header LIKE '%{search_string}%'
+            OR text LIKE '%{search_string}%'
+            OR link LIKE '%{search_string}%')
+            """\
+            .format(search_string=search_string)
+
+    if tags:
+        relevant_event_ids = _get_events_by_tags(timeline_id, tags)
+        events_tags_string_query = \
+            """AND (event_id in ({events_place}))
+            """ \
+                .format(events_place=",".join(["?" for val in relevant_event_ids]))
+        args += relevant_event_ids
+
+    get_timeline_query = """
+    SELECT *
+      FROM events
+	 WHERE timeline_id = ?
+	 {min_time_string}
+	 {max_time_string}
+	 {search_string_query}
+	 {events_tags_string_query}
+     ORDER BY event_time DESC """\
+        .format(min_time_string=min_time_string,
+                max_time_string=max_time_string,
+                search_string_query=search_string_query,
+                events_tags_string_query=events_tags_string_query)
+    results = APP_DB.query_to_json(query_string=get_timeline_query, args=args)
+    if results is None:
+        return make_response("Query Error!", 500)
+    else:
+        import time
+        # start = time.perf_counter()
+        for line in results:
+            line['tags'] = get_tags_by_event(line['event_id'])
+            # line['event_time'] = line['event_time'].strftime("%Y%m%d-%H%M%S")
+        end = time.perf_counter()
+        # print("took: {} seconds".format(end-start))
+        return {"events": results}
+
+
+# ############### DELETES ###############
+
+@check_jwt
+def delete_timeline(timeline_id, **kargs):
+    jwt_token = _search_in_sub_dicts(kargs, "jwt_token")
+    username = decrypt_auth_token(jwt_token)
+
+    role = _check_permission_by_timeline_id(timeline_id, username)
+    if not role:
+        return make_response("User has no permissions or wrong timeline ID", 201)
+
+    role = role[0][0]
+    if PERMISSION_POWER[role] < PERMISSION_POWER['owner']:
+        return make_response("User doesnt have permissions to delete timeline!", 201)
+    else:
+        delete_events_query = """
+            DELETE
+            FROM events
+            WHERE timeline_id = ?"""
+        APP_DB.run(delete_events_query, [timeline_id])
+        delete_timeline_query = """
+            DELETE
+            FROM timeline_ids
+            WHERE id = ?"""
+        APP_DB.run(delete_timeline_query, [timeline_id])
+        delete_permissions_query = """
+                    DELETE
+                    FROM permissions
+                    WHERE timeline_id = ?"""
+        APP_DB.run(delete_permissions_query, [timeline_id])
+        delete_tags_query = """
+                            DELETE
+                            FROM story_tags
+                            WHERE story_id = ?"""
+        APP_DB.run(delete_permissions_query, [timeline_id])
+
+        return make_response("Timeline and its events deleted successfully", 200)
+
+
+def _check_permission_by_timeline_id(event_id, username):
+    query = """
+      SELECT role
+    FROM permissions p  
+     WHERE username =? and timeline_id = ?"""
+    return APP_DB.query(query, [username, event_id], return_headers=False)
+
