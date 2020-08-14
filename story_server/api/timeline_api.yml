@@ -520,6 +520,42 @@ paths:
         200:
           description: Deleted tag
 
+  /timeline/{timeline_url}/edit_tag:
+    post:
+      operationId: story_server.api.posts.edit_tag
+      tags:
+        - Timeline
+        - Tags
+      summary: edit tag
+      description: Edit tag properties.
+      parameters:
+        - name: timeline_url
+          in: path
+          description: timeline url
+          type: string
+          required: True
+        - name: tags_data
+          in: body
+          description: tags data
+          required: true
+          schema:
+            allOf:
+            - $ref: '#/definitions/JwtAuth'
+            - type: object
+              properties:
+                tag_id:
+                  type: string
+                  description: tag id
+                new_tag_color:
+                  description: tag color
+                new_tag_name:
+                  description: tag new name
+              required:
+                - tag_id
+      responses:
+        200:
+          description: modified tag
+
 
 
 

@@ -176,4 +176,52 @@ def _get_events_by_tags(story_id, tags):
     return [val[0] for val in results]
 
 
+@check_jwt
+def edit_tag(timeline_url, tags_data, **kargs):
+    story_id = _get_id_by_url(timeline_url)
+    tag_id = _search_in_sub_dicts(tags_data, "tag_id")
+    new_tag_color = _search_in_sub_dicts(tags_data, "new_tag_color")
+    new_tag_name = _search_in_sub_dicts(tags_data, "new_tag_name")
 
+    jwt_token = _search_in_sub_dicts(tags_data, "jwt_token")
+    username = decrypt_auth_token(jwt_token)
+    if _check_permissions(timeline_url, username=username, return_level=True) < PERMISSION_POWER['write']:
+        return make_response("User has no write permissions.", 201)
+    elif new_tag_name and _is_tag_exists(story_id, new_tag_name):
+        return make_response("There is already a tag with this name.", 201)
+    elif new_tag_name or new_tag_color:
+        return _edit_tag(story_id, tag_id, new_tag_color, new_tag_name)
+    else:
+        return make_response("Server error. Try again or contact us for support.", 201)
+
+
+def _edit_tag(story_id, tag_id, new_tag_color, new_tag_name):
+    """
+    changes the tag properties- name or color (or both).
+    :param story_id:
+    :param tag_id:
+    :param new_tag_color:
+    :param new_tag_name:
+    :return:
+    """
+    args = []
+    tag_name_query_line = ''
+    tag_color_query_line = ''
+    if new_tag_name:
+        args.append(new_tag_name)
+        tag_name_query_line = "tag_name = ?"
+    if new_tag_color:
+        args.append(new_tag_color)
+        tag_color_query_line = "tag_color = ?"
+    if new_tag_color and new_tag_name:
+        tag_name_query_line += ','
+
+    args += [tag_id, story_id]
+    update_tag_query = """
+    UPDATE story_tags
+    SET 
+    {name_query}
+    {color_query}
+    WHERE tag_id =  ? and story_id = ?""".format(name_query=tag_name_query_line, color_query=tag_color_query_line)
+    APP_DB.run(query=update_tag_query, args=args)
+    return make_response("Updated tag.", 200)
