@@ -229,3 +229,5 @@ def permitted_users(timeline_url, **kargs):
     
     """
     return APP_DB.query_to_json(query, args=[timeline_url])
+
+

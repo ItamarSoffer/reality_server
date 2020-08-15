@@ -8,7 +8,7 @@ from ...server_utils.consts import (
     RESERVED_TIMELINE_NAMES,
     ALLOWED_CHARS,
 )
-from .users_functions import _add_permissions, PERMISSION_POWER
+from .users_functions import _add_permissions, PERMISSION_POWER, _check_permissions
 from ..jwt_functions import check_jwt, decrypt_auth_token, _search_in_sub_dicts
 from .utils import _get_id_by_url, _is_url_exists, _check_allowed_chars
 from .tags import _get_events_by_tags, get_tags_by_event
@@ -304,3 +304,51 @@ def _check_permission_by_timeline_id(event_id, username):
      WHERE username =? and timeline_id = ?"""
     return APP_DB.query(query, [username, event_id], return_headers=False)
 
+
+# new
+# ############### UPDATES ###############
+
+
+@check_jwt
+def edit_name_description(timeline_url, new_properties):
+    """
+    edits the name or the description of a story.
+    gets name or description param, and runs the change.
+    :param timeline_url:
+    :param new_properties:
+    :return:
+    """
+    story_id = _get_id_by_url(timeline_url)
+    new_name = _search_in_sub_dicts(new_properties, "new_name")
+    new_description = _search_in_sub_dicts(new_properties, "new_description")
+
+    jwt_token = _search_in_sub_dicts(new_properties, "jwt_token")
+    username = decrypt_auth_token(jwt_token)
+
+    if _check_permissions(timeline_url, username, return_level=True) < PERMISSION_POWER['write']:
+        return make_response('User has no edit permissions', 201)
+    else:
+        if new_name:
+            return _update_story_name(story_id, new_name)
+        else:
+            # the description can be empty.
+            return _update_story_description(story_id, new_description)
+
+def _update_story_name(story_id, new_story_name):
+    update_query = """
+    UPDATE timeline_ids
+    SET name = ?
+    WHERE id = ?
+    """
+    APP_DB.run(update_query, args=[new_story_name, story_id])
+    return make_response('Updated story name', 200)
+
+
+def _update_story_description(story_id, new_story_description):
+    update_query = """
+    UPDATE timeline_ids
+    SET description = ?
+    WHERE id = ?
+    """
+    APP_DB.run(update_query, args=[new_story_description, story_id])
+    return make_response('Updated story description', 200)

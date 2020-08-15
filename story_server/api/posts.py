@@ -7,5 +7,7 @@ if MODE == "SQLITE":
     # from .sqlite_db.posts import _check_allowed_chars
     from .sqlite_db.tags import add_tag
     from .sqlite_db.tags import del_tag
+    # new
     from .sqlite_db.tags import edit_tag
+    from .sqlite_db.story import edit_name_description
 

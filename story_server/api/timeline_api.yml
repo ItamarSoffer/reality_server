@@ -556,6 +556,36 @@ paths:
         200:
           description: modified tag
 
+  /timeline/{timeline_url}/edit_property:
+    post:
+      operationId: story_server.api.posts.edit_name_description
+      tags:
+        - Timeline
+      summary: edit name or description
+      description: modifies the name or description of a story.
+      parameters:
+        - name: timeline_url
+          in: path
+          description: timeline url
+          type: string
+          required: True
+        - name: new_properties
+          in: body
+          description: name or new description
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/definitions/JwtAuth'
+              - type: object
+                properties:
+                  new_name:
+                    description: tag id
+                  new_description:
+                    description: tag color
+      responses:
+        200:
+          description: modified property
+
 
 
 
