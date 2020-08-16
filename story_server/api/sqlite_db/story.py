@@ -12,6 +12,7 @@ from .users_functions import _add_permissions, PERMISSION_POWER, _check_permissi
 from ..jwt_functions import check_jwt, decrypt_auth_token, _search_in_sub_dicts
 from .utils import _get_id_by_url, _is_url_exists, _check_allowed_chars
 from .tags import _get_events_by_tags, get_tags_by_event
+from ...html_parsers.__main__ import HtmlParser
 
 # ############### CREATES ###############
 @check_jwt
@@ -197,6 +198,8 @@ def get_timeline(timeline_url, **kargs):
         )
     args = [timeline_id]
 
+    fetch_extra_data = _search_in_sub_dicts(kargs, 'extra_data')
+
     min_time = _search_in_sub_dicts(kargs, "min_time")
     max_time = _search_in_sub_dicts(kargs, "max_time")
     search_string = _search_in_sub_dicts(kargs, "search_string")
@@ -253,19 +256,14 @@ def get_timeline(timeline_url, **kargs):
         # start = time.perf_counter()
         for line in results:
             line['tags'] = get_tags_by_event(line['event_id'])
-            # line['event_time'] = line['event_time'].strftime("%Y%m%d-%H%M%S")
-            if len(line['header']) % 3 != 0:
-                extra_data_type = 'רנדום'
-                extra_data_color = 'red'
-                if len(line['header']) % 3 == 1:
-                    extra_data_type = 'ynet'
-                    extra_data_color = 'blue'
-                line['extra_data'] = {
-                    'type': extra_data_type,
-                    'color': extra_data_color,
-                    'content': {'date': "23-05-1999", 'author': 'sofferico'}
-                }
-        end = time.perf_counter()
+            if fetch_extra_data:
+                if line['link']:
+                    extra_data_parser = HtmlParser(line['link'])
+                    extra_data = extra_data_parser.match_parser()
+                    if extra_data:
+                        line['extra_data'] = extra_data
+
+        # end = time.perf_counter()
         # print("took: {} seconds".format(end-start))
         return {"events": results}
 

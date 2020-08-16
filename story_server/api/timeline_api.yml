@@ -183,6 +183,8 @@ paths:
                   description: string to search in events.
                 tags:
                   description: string to search in events.
+                extra_data:
+                  description: if true, will etract data from link
       responses:
         200:
           description: Successfully read timeline events from db.
