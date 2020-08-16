@@ -216,6 +216,7 @@ def get_timeline(timeline_url, **kargs):
         args.append(max_time)
 
     if search_string:
+        # check against SQL injection
         search_string_query = \
             """AND (header LIKE '%{search_string}%'
             OR text LIKE '%{search_string}%'
@@ -253,6 +254,17 @@ def get_timeline(timeline_url, **kargs):
         for line in results:
             line['tags'] = get_tags_by_event(line['event_id'])
             # line['event_time'] = line['event_time'].strftime("%Y%m%d-%H%M%S")
+            if len(line['header']) % 3 != 0:
+                extra_data_type = 'רנדום'
+                extra_data_color = 'red'
+                if len(line['header']) % 3 == 1:
+                    extra_data_type = 'ynet'
+                    extra_data_color = 'blue'
+                line['extra_data'] = {
+                    'type': extra_data_type,
+                    'color': extra_data_color,
+                    'content': {'date': "23-05-1999", 'author': 'sofferico'}
+                }
         end = time.perf_counter()
         # print("took: {} seconds".format(end-start))
         return {"events": results}
@@ -333,6 +345,7 @@ def edit_name_description(timeline_url, new_properties):
         else:
             # the description can be empty.
             return _update_story_description(story_id, new_description)
+
 
 def _update_story_name(story_id, new_story_name):
     update_query = """
