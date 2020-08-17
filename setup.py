@@ -14,7 +14,7 @@ requirements = [
 
 setuptools.setup(
     name="story_server",
-    version="1.5",
+    version="1.6",
     license="MIT",
     author="Soffer",
     packages=setuptools.find_packages(),
