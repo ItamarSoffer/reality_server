@@ -12,6 +12,8 @@ if MODE == "SQLITE":
     from .sqlite_db.story import get_timelines_by_user
     from .sqlite_db.xlsx import import_xlsx_file
     from .sqlite_db.tags import get_tags_by_timeline
+    # new
+    from .sqlite_db.users_functions import get_story_users
 
 if MODE == "MSSQL":
     from .mssql_db.gets import get_all_timelines

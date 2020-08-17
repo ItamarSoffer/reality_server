@@ -14,7 +14,7 @@ def generate_auth_token(user_id, ):
     """
     try:
         payload = {
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1, hours=0, minutes=0, seconds=0),
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(days=2, hours=0, minutes=0, seconds=0),
             'iat': datetime.datetime.utcnow(),
             'sub': user_id
         }

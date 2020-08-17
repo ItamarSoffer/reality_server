@@ -10,7 +10,7 @@ from ...server_utils.consts import (
 )
 from .users_functions import _add_permissions, PERMISSION_POWER, _check_permissions
 from ..jwt_functions import check_jwt, decrypt_auth_token, _search_in_sub_dicts
-from .utils import _get_id_by_url, _is_url_exists, _check_allowed_chars
+from .utils import _get_id_by_url, _is_url_exists, _check_allowed_chars, _not_valid_sql_input
 from .tags import _get_events_by_tags, get_tags_by_event
 from ...html_parsers.__main__ import HtmlParser
 
@@ -68,6 +68,9 @@ def get_all_timelines(num=None, **kargs):
     search_string = _search_in_sub_dicts(kargs, search_key="search_string")
     search_string_query = ''
     if search_string is not None:
+        search_string = search_string.encode('utf-8')
+        if _not_valid_sql_input(search_string):
+            return make_response('Non Valid Search!', 201)
         search_string_query = \
             """WHERE (name LIKE '%{search_string}%'
             OR description LIKE '%{search_string}%')
@@ -107,7 +110,7 @@ def get_all_timelines(num=None, **kargs):
             WHERE username = ?"""
             full_name = APP_DB.query_to_json(query_string=q, args=[line['create_user']])[0]['display_name']
             line['create_user'] = full_name
-            # line['last_modify'] = line['last_modify'].strftime("%Y%m%d-%H%M%S")
+            line['last_modify'] = line['last_modify'][:19]
         return results
 
 
@@ -123,6 +126,9 @@ def get_timelines_by_user(num=None, **kargs):
     search_string = _search_in_sub_dicts(kargs, search_key="search_string")
     search_string_query = ''
     if search_string is not None:
+        search_string = search_string.encode('utf-8')
+        if _not_valid_sql_input(search_string):
+            return make_response('Non Valid Search!', 201)
         search_string_query = \
             """AND(name LIKE '%{search_string}%'
             OR description LIKE '%{search_string}%')
@@ -164,6 +170,8 @@ SELECT id, url, username, role , t.description, t.name, t.create_user, e.counter
             WHERE username = ?"""
             full_name = APP_DB.query_to_json(query_string=q, args=[line['create_user']])[0]['display_name']
             line['create_user'] = full_name
+            line['last_modify'] = line['last_modify'][:19]
+
             # line['last_modify'] = line['last_modify'].strftime("%Y%m%d-%H%M%S")
         return results
 
@@ -220,6 +228,9 @@ def get_timeline(timeline_url, **kargs):
 
     if search_string:
         # check against SQL injection
+        search_string = search_string.encode('utf-8')
+        if _not_valid_sql_input(search_string):
+            return make_response('Non Valid Search!', 201)
         search_string_query = \
             """AND (header LIKE '%{search_string}%'
             OR text LIKE '%{search_string}%'

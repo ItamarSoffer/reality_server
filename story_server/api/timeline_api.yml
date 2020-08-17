@@ -345,7 +345,7 @@ paths:
             - type: object
               properties:
                 username:
-                  type: string
+#                  type: string
                   description: user name
                 role:
                   type: string
@@ -490,6 +490,26 @@ paths:
       responses:
         200:
           description: returned timeline tags
+
+  /get_permitted_users:
+    post:
+      operationId: story_server.api.users_functions.get_story_users
+      tags:
+        - Timeline
+        - Users
+      summary: returns all users permitted to story
+      description: returns all users permitted to story
+      parameters:
+        - name: token_data
+          in: body
+          description: the jwt token.
+          required: True
+          schema:
+            allOf:
+            - $ref: '#/definitions/JwtAuth'
+      responses:
+        200:
+          description: Returned all users
 
   /timeline/{timeline_url}/del_tag:
     post:

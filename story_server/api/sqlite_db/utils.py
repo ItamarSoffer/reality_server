@@ -37,3 +37,15 @@ def _check_allowed_chars(string, allowed_chars):
     is_cleared = [c in allowed_chars for c in string]
     return all(is_cleared)
 
+
+def _not_valid_sql_input(sql_input):
+    """
+    checks that the sql is valis and no bas searches
+    :param sql_input:
+    :return:
+    """
+    BAD_SQL = ["%", "'", '"', ';', "#", "?", "-"]
+    BAD_SQL = [val.encode('utf-8') for val in BAD_SQL]
+    is_bad_sql = [c in BAD_SQL for c in sql_input]
+    return any(is_bad_sql)
+

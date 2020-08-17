@@ -9,3 +9,4 @@ if MODE == "SQLITE":
     from .sqlite_db.users_functions import _is_owner
     from .sqlite_db.users_functions import set_permissions
     from .sqlite_db.users_functions import permitted_users
+    from .sqlite_db.users_functions import get_story_users

@@ -136,6 +136,12 @@ def check_permissions(timeline_url, **kargs):
 
 
 def _user_has_story_permissions(username):
+    """
+    checks if the user has permissions to story.
+    in NH- works with the caching process.
+    :param username:
+    :return:
+    """
     return APP_DB.query(
         query_string="""
         SELECT username 
@@ -169,6 +175,44 @@ def _role_check(username, timeline_url, role):
         return permissions['role'] == role
 
 
+def _set_permissions_for_user(timeline_url, username, role, adding_user, return_response=True):
+    """
+    sets permission to user.
+    :param timeline_url:
+    :param permissions_data: the data
+    :return:
+    """
+
+    response = None
+    if _check_permissions(timeline_url, adding_user, return_level=True) < PERMISSION_POWER['owner']:
+        response = make_response('You cannot set permissions', 201)
+
+    elif not response and role not in PERMISSION_POWER.keys():
+        response = make_response("non valid role type!", 201)
+
+    elif not response and username == adding_user:
+        response = make_response("Dont mess with your OWN permissions.", 201)
+
+    elif not response and not (_user_has_story_permissions(username) or username == 'public'):
+        response = make_response("User '{user}' has no permissions to Story!".format(user=username), 201)
+
+    elif not response and _check_permissions(timeline_url, username, return_level=True) == PERMISSION_POWER['creator']:
+        response = make_response("Do not mess with the creator's permissions.", 201)
+
+    elif not response and role == 'creator':
+        response = make_response("You cannot add creator permissions.", 201)
+
+    elif not response and username == 'public' and (role == 'creator' or role == 'owner'):
+        response = make_response("Adding Owner permissions to public is not permitted.", 201)
+    else:
+        _add_permissions(timeline_url=timeline_url, username=username, role=role)
+        response = make_response("Permissions were set to {username}".format(username=username), 200)
+
+    if return_response:
+        if response is None:
+            response = make_response('Permissions Error', 201)
+        return response
+
 @check_jwt
 def set_permissions(timeline_url, permissions_data, **kargs):
     """
@@ -178,34 +222,19 @@ def set_permissions(timeline_url, permissions_data, **kargs):
     :return:
     """
 
-    username = permissions_data.get("username")
+    usernames_to_add = permissions_data.get("username")
     role = permissions_data.get("role")
     jwt_token = _search_in_sub_dicts(permissions_data, "jwt_token")
     adding_user = decrypt_auth_token(jwt_token)
 
     # check username has permissions to system.
-
-    if role not in PERMISSION_POWER.keys():
-        return make_response("non valid role type!", 201)
-    if username == adding_user:
-        return make_response("Dont mess with your OWN permissions.", 201)
-    elif not (_user_has_story_permissions(username) or username == 'public'):
-        return make_response("User '{user}' has no permissions to Story!".format(user=username), 201)
-    # never will be because the jwt auth.
-    # elif not _user_has_story_permissions(adding_user):
-    #     return make_response("User '{user}' has no permissions to Story!".format(user=adding_user), 201)
-    # checks he doesnt messes the permissions:
-    elif _check_permissions(timeline_url, username, return_level=True) == PERMISSION_POWER['creator']:
-        return make_response("Do not mess with the creator's permissions.", 201)
-
-    # adds relevant permissions.
-    elif _check_permissions(timeline_url, adding_user, return_level=True) >= PERMISSION_POWER['owner']:
-        if role == 'creator':
-            return make_response("You cannot add creator permissions.", 201)
-        _add_permissions(timeline_url=timeline_url, username=username, role=role)
-        return make_response("Permissions were set to {username}".format(username=username), 200)
-    else:
-        return make_response("Only owner and creators can change permissions.", 201)
+    if len(usernames_to_add) > 1:
+        for username in usernames_to_add:
+            _set_permissions_for_user(timeline_url, username, role, adding_user, return_response=False)
+        return make_response("Permissions were set to users according to roles.", 200)
+    elif len(usernames_to_add) == 1:
+        username = usernames_to_add[0]
+        return _set_permissions_for_user(timeline_url, username, role, adding_user)
 
 
 @check_jwt
@@ -231,3 +260,14 @@ def permitted_users(timeline_url, **kargs):
     return APP_DB.query_to_json(query, args=[timeline_url])
 
 
+@check_jwt
+def get_story_users(**kargs):
+    """
+    returns a list of usernames and display names.
+    In NH: works with the CACHE system!
+    :param kargs:
+    :return:
+    """
+    q = "SELECT username, display_name from users"
+    results = APP_DB.query(q,return_headers=False)
+    return sorted(results, key=lambda a: a[1])
