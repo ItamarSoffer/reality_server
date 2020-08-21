@@ -22,12 +22,13 @@ class HtmlParser(object):
     """
     PARSERS_PARAMS = {'ynet': ['ynet', '#ff0000']}
 
-    def __init__(self, url):
+    def __init__(self, url, username):
         """
         each function will download the data, some will need GET and some POST.
         :param url:
         """
         self.url = url
+        self.username = username
         self.content = None
         # self.match_parser()
         # parse by functions

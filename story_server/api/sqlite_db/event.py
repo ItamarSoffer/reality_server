@@ -132,10 +132,11 @@ def _create_new_event(timeline_url, new_event):
     jwt_token = _search_in_sub_dicts(new_event, "jwt_token")
     _add_event_data(timeline_id=timeline_id, event_id=event_id, new_event=new_event, jwt_token=jwt_token)
     tags = _search_in_sub_dicts(new_event, "tags")
-    tags_ids = []
-    for tag_name in tags:
-        tags_ids.append(_get_tag_by_story(timeline_id, tag_name))
-    _add_tags(timeline_id, event_id, tags_ids)
+    if tags:
+        tags_ids = []
+        for tag_name in tags:
+            tags_ids.append(_get_tag_by_story(timeline_id, tag_name))
+        _add_tags(timeline_id, event_id, tags_ids)
     return make_response("added new record to '{timeline_url}'!".format(timeline_url=timeline_url), 200)
 
 

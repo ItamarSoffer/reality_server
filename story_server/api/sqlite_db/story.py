@@ -12,7 +12,7 @@ from .users_functions import _add_permissions, PERMISSION_POWER, _check_permissi
 from ..jwt_functions import check_jwt, decrypt_auth_token, _search_in_sub_dicts
 from .utils import _get_id_by_url, _is_url_exists, _check_allowed_chars, _not_valid_sql_input
 from .tags import _get_events_by_tags, get_tags_by_event
-from ...html_parsers.__main__ import HtmlParser
+from ...html_parsers import HtmlParser, fetch_story_extra_data
 
 # ############### CREATES ###############
 @check_jwt
@@ -263,20 +263,35 @@ def get_timeline(timeline_url, **kargs):
     if results is None:
         return make_response("Query Error!", 500)
     else:
-        import time
-        # start = time.perf_counter()
         for line in results:
             line['tags'] = get_tags_by_event(line['event_id'])
-            if fetch_extra_data:
-                if line['link']:
-                    extra_data_parser = HtmlParser(line['link'])
-                    extra_data = extra_data_parser.match_parser()
-                    if extra_data:
-                        line['extra_data'] = extra_data
+        if fetch_extra_data:
+            jwt_token = _search_in_sub_dicts(kargs, 'jwt_token')
+            username = decrypt_auth_token(jwt_token)
+            results = _fetch_extra_data(results, username)
 
-        # end = time.perf_counter()
-        # print("took: {} seconds".format(end-start))
         return {"events": results}
+
+
+def _fetch_extra_data(events, username):
+    multiprocess = False
+    import time
+    start = time.perf_counter()
+    if multiprocess:
+        events = fetch_story_extra_data(events, username)
+    else:
+        for line in events:
+            if line['link']:
+                extra_data_parser = HtmlParser(line['link'], username)
+                extra_data = extra_data_parser.match_parser()
+                if extra_data:
+                    line['extra_data'] = extra_data
+                    print("fetched {} after {}".format(line['link'], time.perf_counter() - start))
+
+    end = time.perf_counter()
+    print("took: {} seconds".format(end - start))
+    return events
+
 
 
 # ############### DELETES ###############
