@@ -68,7 +68,7 @@ def get_all_timelines(num=None, **kargs):
     search_string = _search_in_sub_dicts(kargs, search_key="search_string")
     search_string_query = ''
     if search_string is not None:
-        search_string = search_string.encode('utf-8')
+        # search_string = search_string.encode('utf-8')
         if _not_valid_sql_input(search_string):
             return make_response('Non Valid Search!', 201)
         search_string_query = \
@@ -126,7 +126,7 @@ def get_timelines_by_user(num=None, **kargs):
     search_string = _search_in_sub_dicts(kargs, search_key="search_string")
     search_string_query = ''
     if search_string is not None:
-        search_string = search_string.encode('utf-8')
+        # search_string = search_string.encode('utf-8')
         if _not_valid_sql_input(search_string):
             return make_response('Non Valid Search!', 201)
         search_string_query = \
@@ -134,6 +134,7 @@ def get_timelines_by_user(num=None, **kargs):
             OR description LIKE '%{search_string}%')
             """\
             .format(search_string=search_string)
+        print(search_string_query)
 
     timelines_query = """
         WITH event_counter AS 
@@ -172,8 +173,8 @@ SELECT id, url, username, role , t.description, t.name, t.create_user, e.counter
             line['create_user'] = full_name
             line['last_modify'] = line['last_modify'][:19]
 
-            # line['last_modify'] = line['last_modify'].strftime("%Y%m%d-%H%M%S")
-        return results
+        # in the front: it will be in response.data.results
+        return make_response({"results": results}, 200)
 
 
 @check_jwt
@@ -228,7 +229,7 @@ def get_timeline(timeline_url, **kargs):
 
     if search_string:
         # check against SQL injection
-        search_string = search_string.encode('utf-8')
+        # search_string = search_string.encode('utf-8')
         if _not_valid_sql_input(search_string):
             return make_response('Non Valid Search!', 201)
         search_string_query = \
@@ -274,7 +275,7 @@ def get_timeline(timeline_url, **kargs):
 
 
 def _fetch_extra_data(events, username):
-    multiprocess = False
+    multiprocess = True
     import time
     start = time.perf_counter()
     if multiprocess:

@@ -45,7 +45,7 @@ def _not_valid_sql_input(sql_input):
     :return:
     """
     BAD_SQL = ["%", "'", '"', ';', "#", "?", "-"]
-    BAD_SQL = [val.encode('utf-8') for val in BAD_SQL]
+    # BAD_SQL = [val.encode('utf-8') for val in BAD_SQL]
     is_bad_sql = [c in BAD_SQL for c in sql_input]
     return any(is_bad_sql)
 
