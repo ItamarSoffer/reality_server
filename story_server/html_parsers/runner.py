@@ -1,4 +1,5 @@
 import multiprocessing as mp
+from multiprocessing.pool import ThreadPool
 from .__main__ import HtmlParser
 
 
@@ -23,7 +24,7 @@ def fetch_story_extra_data(events, username):
     """
     mp_results = []
     no_extra = []
-    pool = mp.Pool(3)
+    pool = ThreadPool(3)
 
     import time
     start = time.perf_counter()
@@ -38,7 +39,6 @@ def fetch_story_extra_data(events, username):
 
     output = [p.get() for p in mp_results]
     pool.close()
-    pool.join()
 
     end = time.perf_counter()
     print("all ended: {} seconds".format(end - start))
