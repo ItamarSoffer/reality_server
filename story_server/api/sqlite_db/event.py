@@ -6,10 +6,11 @@ from ...server_utils.consts import (
     TABLES_COLUMNS,
     TABLES_NAMES,
 )
-from .users_functions import  _check_permissions, PERMISSION_POWER
+from .users_functions import _check_permissions, PERMISSION_POWER
 from ..jwt_functions import check_jwt, decrypt_auth_token, _search_in_sub_dicts
 from .utils import _get_id_by_url
-from .tags import _get_tag_by_story, _add_tags
+from .tags import _get_tag_by_story, _add_tags, get_tags_by_event
+from .story import _fetch_extra_data
 
 
 @check_jwt
@@ -50,13 +51,15 @@ def add_event(timeline_url, new_event, **kargs):
         return _create_new_event(timeline_url=timeline_url, new_event=new_event)
     else:
         print("UPDATE MODE")
-        return _update_event(timeline_id, event_id, new_event)
+        return _update_event(timeline_id, event_id, new_event, jwt_token)
 
 
-def _update_event(timeline_id, event_id, new_event):
+def _update_event(timeline_id, event_id, new_event, jwt_token):
     _update_event_data(event_id, new_event)
     _update_event_tags(timeline_id, event_id, event_data=new_event)
-    return make_response("Event has been updated", 200)
+    updated_event = _get_single_event(event_id, jwt_token)
+    return make_response(
+        {"message": "Event has been updated", "eventData": updated_event}, 200)
 
 
 def _update_event_data(event_id, event_data):
@@ -137,7 +140,11 @@ def _create_new_event(timeline_url, new_event):
         for tag_name in tags:
             tags_ids.append(_get_tag_by_story(timeline_id, tag_name))
         _add_tags(timeline_id, event_id, tags_ids)
-    return make_response("added new record to '{timeline_url}'!".format(timeline_url=timeline_url), 200)
+    updated_event = _get_single_event(event_id, jwt_token)
+    return make_response({
+        "message": "added new record to '{timeline_url}'!".format(timeline_url=timeline_url),
+        "eventData": updated_event},
+        200)
 
 
 def _add_event_data(timeline_id, event_id, new_event, jwt_token):
@@ -156,6 +163,8 @@ def _add_event_data(timeline_id, event_id, new_event, jwt_token):
     event_time = '{date} {hour}'.format(date=new_event.get("date"),
                                         hour=new_event.get("hour", ""))
     frame_color = new_event.get("frame_color", "rgb(33, 150, 243)")
+    if frame_color is None:
+        frame_color = "rgb(33, 150, 243)"
     icon = new_event.get("icon", "")
     insertion_time = get_timestamp()
     modify_time = get_timestamp()
@@ -214,4 +223,23 @@ def _check_permission_by_event(event_id, username):
    ON p.timeline_id = e.timeline_id 
    WHERE username =? and event_id = ?"""
     return APP_DB.query(query, [username, event_id], return_headers=False)
+
+
+def _get_single_event(event_id, jwt_token):
+    """
+    returns a single event data
+    :param event_id:
+    :return:
+    """
+    query = """
+    SELECT *
+      FROM events
+      WHERE event_id = ?
+    """
+    result = APP_DB.query_to_json(query, args=[event_id])
+    username = decrypt_auth_token(jwt_token)
+    result = _fetch_extra_data(result, username)
+    result = result[0]
+    result['tags'] = get_tags_by_event(event_id)
+    return result
 
