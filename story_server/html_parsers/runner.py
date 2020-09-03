@@ -24,7 +24,7 @@ def fetch_story_extra_data(events, username):
     """
     mp_results = []
     no_extra = []
-    pool = ThreadPool(3)
+    pool = ThreadPool(5)
 
     import time
     start = time.perf_counter()
