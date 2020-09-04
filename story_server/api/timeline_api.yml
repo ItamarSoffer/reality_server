@@ -608,6 +608,72 @@ paths:
         200:
           description: modified property
 
+  /timeline/{timeline_url}/add_favorite:
+    post:
+      operationId: story_server.api.favorites.add_favorite
+      tags:
+        - Favorites
+      summary: Adds story to favorites
+      description: Adds story to favorites
+      parameters:
+        - name: timeline_url
+          in: path
+          description: timeline url
+          type: string
+          required: True
+        - name: token_data
+          in: body
+          description: the jwt token.
+          required: True
+          schema:
+            allOf:
+            - $ref: '#/definitions/JwtAuth'
+      responses:
+        200:
+          description: Added Story to favorites list
+
+  /timeline/{timeline_url}/del_favorite:
+    post:
+      operationId: story_server.api.favorites.del_favorite
+      tags:
+        - Favorites
+      summary: Dels story to favorites
+      description: Dels story to favorites
+      parameters:
+        - name: timeline_url
+          in: path
+          description: timeline url
+          type: string
+          required: True
+        - name: token_data
+          in: body
+          description: the jwt token.
+          required: True
+          schema:
+            allOf:
+            - $ref: '#/definitions/JwtAuth'
+      responses:
+        200:
+          description: Deleted Story from favorites list
+
+  /get_favorites:
+    post:
+      operationId: story_server.api.favorites.get_favorites
+      tags:
+        - Favorites
+      summary: Favorites list
+      description: Returns a user favorites list
+      parameters:
+        - name: token_data
+          in: body
+          description: the jwt token.
+          required: True
+          schema:
+            allOf:
+            - $ref: '#/definitions/JwtAuth'
+      responses:
+        200:
+          description: Returned favorites list
 
 
 
