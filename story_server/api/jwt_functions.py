@@ -3,11 +3,12 @@ import jwt
 import datetime
 import functools
 from flask import make_response
+import json
 
 from ..server_utils.consts import SECRET_KEY
 
 
-def generate_auth_token(user_id, ):
+def generate_auth_token(user_id, password):
     """
     Generates the Auth Token
     :return: string
@@ -16,7 +17,7 @@ def generate_auth_token(user_id, ):
         payload = {
             'exp': datetime.datetime.utcnow() + datetime.timedelta(days=2, hours=0, minutes=0, seconds=0),
             'iat': datetime.datetime.utcnow(),
-            'sub': user_id
+            'sub': json.dumps([user_id, password])
         }
         return jwt.encode(
             payload,
@@ -27,7 +28,7 @@ def generate_auth_token(user_id, ):
         return e
 
 
-def decrypt_auth_token(auth_token):
+def decrypt_auth_token(auth_token, return_all=False):
     """
     Decodes the auth token
     :param auth_token:
@@ -35,7 +36,16 @@ def decrypt_auth_token(auth_token):
     """
     try:
         payload = jwt.decode(auth_token, SECRET_KEY)
-        return payload['sub']
+        user_auth = payload['sub']
+        try:
+            user_auth = json.loads(user_auth)
+            if return_all:
+                return user_auth
+            else:
+                return user_auth[1]
+        except ValueError:
+            # if the token is string, only for the middle time
+            return user_auth
     except jwt.ExpiredSignatureError:
         return 'INVALID TOKEN: Signature expired. Please log in again.'
     except jwt.InvalidTokenError:

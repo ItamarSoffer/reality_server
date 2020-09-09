@@ -44,7 +44,7 @@ def login(credentials):
             table=TABLES_NAMES["CONNECTIONS"],
             columns=TABLES_COLUMNS["CONNECTIONS"],
             data=[username, get_timestamp()])
-        return generate_auth_token(username).decode('utf-8')
+        return generate_auth_token(username, password).decode('utf-8')
         # return make_response("{user} logged in successfully".format(user=username), 200)
 
 
