@@ -11,6 +11,7 @@ from ..jwt_functions import check_jwt, decrypt_auth_token, _search_in_sub_dicts
 from .utils import _get_id_by_url
 from .tags import _get_tag_by_story, _add_tags, get_tags_by_event
 from .story import _fetch_extra_data
+from ...time_extractors import TimeExtract
 
 
 @check_jwt
@@ -242,4 +243,27 @@ def _get_single_event(event_id, jwt_token):
     result = result[0]
     result['tags'] = get_tags_by_event(event_id)
     return result
+
+
+@check_jwt
+def extract_time(**kargs):
+    """
+    Extracts the time from the link.
+    If success, return 200 with a dict of date and time.
+    If falis, return 201.
+    :param link: string, the link
+    :param kargs: jwt token
+    :return:
+    """
+    jwt_token = _search_in_sub_dicts(kargs, "jwt_token")
+    link = _search_in_sub_dicts(kargs, "link")
+
+    username, password = decrypt_auth_token(jwt_token, return_all=True)
+    time_extractor = TimeExtract(link=link, username=username, password=password)
+    link_time = time_extractor.extract()
+    if link_time:
+        return make_response(
+            {"message": "Datetime Extracted!", "linkTime": link_time}, 200)
+    else:
+        return make_response("Failed to extract time, make sure Story integrates with this system.", 201)
 

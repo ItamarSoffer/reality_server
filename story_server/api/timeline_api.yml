@@ -675,7 +675,29 @@ paths:
         200:
           description: Returned favorites list
 
-
+  /utils/extact_time:
+    post:
+      operationId: story_server.api.gets.extract_time
+      tags:
+        - Timeline
+        - Event
+      summary: Datetime extractor
+      description: Extracts the date and time from link.
+      parameters:
+        - name: token_data
+          in: body
+          description: the jwt token.
+          required: True
+          schema:
+            allOf:
+            - $ref: '#/definitions/JwtAuth'
+            - type: object
+              properties:
+                link:
+                  description: Link to extract time from
+      responses:
+        200:
+          description: Extracted time.
 
 definitions:
   JwtAuth:

@@ -14,6 +14,7 @@ if MODE == "SQLITE":
     from .sqlite_db.tags import get_tags_by_timeline
     # new
     from .sqlite_db.users_functions import get_story_users
+    from .sqlite_db.event import extract_time
 
 if MODE == "MSSQL":
     from .mssql_db.gets import get_all_timelines

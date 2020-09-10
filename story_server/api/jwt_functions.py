@@ -31,6 +31,8 @@ def generate_auth_token(user_id, password):
 def decrypt_auth_token(auth_token, return_all=False):
     """
     Decodes the auth token
+    :param return_all:
+    :return:
     :param auth_token:
     :return: integer|string
     """
