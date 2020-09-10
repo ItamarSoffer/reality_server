@@ -263,7 +263,8 @@ def extract_time(**kargs):
     link_time = time_extractor.extract()
     if link_time:
         return make_response(
-            {"message": "Datetime Extracted!", "linkTime": link_time}, 200)
+            {"message": "Datetime Extracted: {}".format(link_time['datetime']),
+             "linkTime": link_time}, 200)
     else:
         return make_response("Failed to extract time, make sure Story integrates with this system.", 201)
 

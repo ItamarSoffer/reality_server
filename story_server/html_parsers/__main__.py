@@ -20,7 +20,10 @@ class HtmlParser(object):
 
     The init function will match the relevant parser by regex of the url
     """
-    PARSERS_PARAMS = {'ynet': ['ynet', '#ff0000']}
+    PARSERS_PARAMS = {'ynet': ['ynet', '#ff0000'],
+                      'iframe': ['iframe', '#bfbfbf'],
+                      'splunk': ['splunk', '#ff7a45'],
+                      }
 
     def __init__(self, url, username):
         """
@@ -34,13 +37,21 @@ class HtmlParser(object):
         # parse by functions
 
     def match_parser(self):
-        pattern_parsers_dict = {".*www.ynet.co.il/articles/.*": self.ynet_parser}
+        pattern_parsers_dict = {".*www.ynet.co.il/articles/.*": self.ynet_parser,
+                                "<iframe .*></iframe>": self.iframe_parser}
         for regex_pattern, parse_function in pattern_parsers_dict.items():
             if re.findall(regex_pattern, self.url):
                 # print("RUNS ON {}".format(self.url))
                 # print("MATCHES REGEX: {}".format(regex_pattern))
                 return parse_function()
         return None
+
+    def iframe_parser(self):
+        soup = BeautifulSoup(self.url, "html.parser")
+        iframe = soup.find_all('iframe')[0]
+        self.content = iframe.attrs
+        return self._return_story_dict('iframe')
+
 
     def ynet_parser(self):
         res = requests.get(self.url)
