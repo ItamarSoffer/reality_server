@@ -25,7 +25,7 @@ def add_favorite(timeline_url, **kargs):
     APP_DB.insert(table=TABLES_NAMES['FAVORITES'],
                   columns=TABLES_COLUMNS['FAVORITES'],
                   data=[story_id, username, get_timestamp()])
-    print("added to     fav list")
+    print("added to favorites list")
     return make_response("Added story to favorites", 200)
 
 

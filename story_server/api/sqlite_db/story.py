@@ -184,6 +184,12 @@ def get_timeline_basic_data(timeline_url, **kargs):
     :param timeline_url:
     :return:
     """
+    jwt_token = _search_in_sub_dicts(kargs, "jwt_token")
+    user = decrypt_auth_token(jwt_token)
+    if _check_permissions(timeline_url, user, return_level=True) < PERMISSION_POWER['read']:
+        return make_response(
+            "User {user} has no read permissions".format(user=user), 201
+        )
     data_query = """
     SELECT *
       FROM timeline_ids
@@ -204,6 +210,12 @@ def get_timeline(timeline_url, **kargs):
     if timeline_id is None:
         return make_response(
             "URL '{url}' does not exists!".format(url=timeline_url), 404
+        )
+    jwt_token = _search_in_sub_dicts(kargs, "jwt_token")
+    user = decrypt_auth_token(jwt_token)
+    if _check_permissions(timeline_url, user, return_level=True) < PERMISSION_POWER['read']:
+        return make_response(
+            "User {user} has no write permissions".format(user=user), 201
         )
     args = [timeline_id]
 
@@ -329,7 +341,7 @@ def delete_timeline(timeline_id, **kargs):
                             DELETE
                             FROM story_tags
                             WHERE story_id = ?"""
-        APP_DB.run(delete_permissions_query, [timeline_id])
+        APP_DB.run(delete_tags_query, [timeline_id])
 
         return make_response("Timeline and its events deleted successfully", 200)
 

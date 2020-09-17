@@ -19,7 +19,12 @@ TAGS_COLORS = ['#f5222d', '#fa541c', '#fa8c16', '#faad14', '#fadb14',
 
 @check_jwt
 def add_tag(timeline_url, **kargs):
-    # check the user permissions
+    jwt_token = _search_in_sub_dicts(kargs, "jwt_token")
+    user = decrypt_auth_token(jwt_token)
+    if _check_permissions(timeline_url, user, return_level=True) < PERMISSION_POWER['write']:
+        return make_response(
+            "User {user} has no write permissions".format(user=user), 201
+        )
     story_id = _get_id_by_url(timeline_url)
     tag_name = _search_in_sub_dicts(kargs, "tag_name")
     if _is_tag_exists(story_id, tag_name):
@@ -49,6 +54,12 @@ def get_tags_by_timeline(timeline_url, **kargs):
     :param kargs:
     :return:
     """
+    jwt_token = _search_in_sub_dicts(kargs, "jwt_token")
+    user = decrypt_auth_token(jwt_token)
+    if _check_permissions(timeline_url, user, return_level=True) < PERMISSION_POWER['read']:
+        return make_response(
+            "User {user} has no read permissions".format(user=user), 201
+        )
     story_id = _get_id_by_url(timeline_url)
     tag_query = """
     with tags_counter AS (	
@@ -75,6 +86,12 @@ def del_tag(timeline_url, tags_data):
     :param tags_data:
     :return:
     """
+    jwt_token = _search_in_sub_dicts(tags_data, "jwt_token")
+    user = decrypt_auth_token(jwt_token)
+    if _check_permissions(timeline_url, user, return_level=True) < PERMISSION_POWER['write']:
+        return make_response(
+            "User {user} has no write permissions".format(user=user), 201
+        )
     jwt_token = _search_in_sub_dicts(tags_data, "jwt_token")
     user = decrypt_auth_token(jwt_token)
     if _check_permissions(timeline_url, user, return_level=True) < PERMISSION_POWER['write']:
