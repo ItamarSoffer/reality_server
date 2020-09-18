@@ -1,21 +1,24 @@
 import uuid
+
 from flask import make_response
+
+from .tags import _get_events_by_tags, get_tags_by_event
+from .users_functions import _add_permissions, PERMISSION_POWER, _check_permissions
+from .utils import _get_id_by_url, _is_url_exists, _check_allowed_chars, _not_valid_sql_input
 from ..__main__ import APP_DB
-from ...server_utils.time_functions import get_timestamp
+from ..jwt_functions import check_jwt, decrypt_auth_token, _search_in_sub_dicts
+from ...html_parsers import HtmlParser, fetch_story_extra_data
 from ...server_utils.consts import (
     TABLES_COLUMNS,
     TABLES_NAMES,
     RESERVED_TIMELINE_NAMES,
     ALLOWED_CHARS,
 )
-from .users_functions import _add_permissions, PERMISSION_POWER, _check_permissions
-from ..jwt_functions import check_jwt, decrypt_auth_token, _search_in_sub_dicts
-from .utils import _get_id_by_url, _is_url_exists, _check_allowed_chars, _not_valid_sql_input
-from .tags import _get_events_by_tags, get_tags_by_event
-from ...html_parsers import HtmlParser, fetch_story_extra_data
+from ...server_utils.time_functions import get_timestamp
+
 
 # ############### CREATES ###############
-@check_jwt
+@check_jwt(log=True)
 def create_timeline(new_timeline, **kargs):
     """
         creates a new timeline.
@@ -59,7 +62,7 @@ def create_timeline(new_timeline, **kargs):
 # ############### GETS ###############
 
 
-@check_jwt
+@check_jwt()
 def get_all_timelines(num=None, **kargs):
     """
     returns all the data from the timeline_ids table, for the main cards view.
@@ -114,7 +117,7 @@ def get_all_timelines(num=None, **kargs):
         return results
 
 
-@check_jwt
+@check_jwt()
 def get_timelines_by_user(num=None, **kargs):
     """
     returns all the timelines a specific user can access
@@ -177,7 +180,7 @@ SELECT id, url, username, role , t.description, t.name, t.create_user, e.counter
         return make_response({"results": results}, 200)
 
 
-@check_jwt
+@check_jwt()
 def get_timeline_basic_data(timeline_url, **kargs):
     """
     returns the basic timeline data.
@@ -198,7 +201,7 @@ def get_timeline_basic_data(timeline_url, **kargs):
     return results
 
 
-@check_jwt
+@check_jwt(log=True)
 def get_timeline(timeline_url, **kargs):
     """
     returns all the events data of a timeline
@@ -309,7 +312,7 @@ def _fetch_extra_data(events, username):
 
 # ############### DELETES ###############
 
-@check_jwt
+@check_jwt()
 def delete_timeline(timeline_id, **kargs):
     jwt_token = _search_in_sub_dicts(kargs, "jwt_token")
     username = decrypt_auth_token(jwt_token)

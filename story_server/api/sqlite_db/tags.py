@@ -1,23 +1,24 @@
+import uuid
+
 from flask import make_response
 from story_server.api.__main__ import APP_DB
 from story_server.server_utils.consts import (
     TABLES_COLUMNS,
     TABLES_NAMES,
 )
-import uuid
-from ...server_utils.time_functions import get_timestamp
+
+from .users_functions import PERMISSION_POWER, _check_permissions
+from .utils import _get_id_by_url
 # from .posts import _add_tags
 from ..jwt_functions import check_jwt, _search_in_sub_dicts, decrypt_auth_token
-from .utils import _get_id_by_url
-from .users_functions import PERMISSION_POWER, _check_permissions
-
+from ...server_utils.time_functions import get_timestamp
 
 TAGS_COLORS = ['#f5222d', '#fa541c', '#fa8c16', '#faad14', '#fadb14',
                '#a0d911', '#52c41a', '#13c2c2', '#40a9ff', '#2f54eb',
                '#722ed1', '#eb2f96',  "#808080", '#000000']
 
 
-@check_jwt
+@check_jwt(log=True)
 def add_tag(timeline_url, **kargs):
     jwt_token = _search_in_sub_dicts(kargs, "jwt_token")
     user = decrypt_auth_token(jwt_token)
@@ -46,7 +47,7 @@ def add_tag(timeline_url, **kargs):
     return make_response("created new tag", 200)
 
 
-@check_jwt
+@check_jwt()
 def get_tags_by_timeline(timeline_url, **kargs):
     """
     returns all tags of story
@@ -78,7 +79,7 @@ FROM events_tags
     return APP_DB.query_to_json(tag_query, [story_id])
 
 
-@check_jwt
+@check_jwt(log=True)
 def del_tag(timeline_url, tags_data):
     """
     deletes the tag from timeline and from all the events
@@ -193,7 +194,7 @@ def _get_events_by_tags(story_id, tags):
     return [val[0] for val in results]
 
 
-@check_jwt
+@check_jwt(log=True)
 def edit_tag(timeline_url, tags_data, **kargs):
     story_id = _get_id_by_url(timeline_url)
     tag_id = _search_in_sub_dicts(tags_data, "tag_id")

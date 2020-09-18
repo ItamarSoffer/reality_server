@@ -1,20 +1,22 @@
 import uuid
+
 from flask import make_response
+
+from .story import _fetch_extra_data
+from .tags import _get_tag_by_story, _add_tags, get_tags_by_event
+from .users_functions import _check_permissions, PERMISSION_POWER
+from .utils import _get_id_by_url
 from ..__main__ import APP_DB
-from ...server_utils.time_functions import get_timestamp
+from ..jwt_functions import check_jwt, decrypt_auth_token, _search_in_sub_dicts
 from ...server_utils.consts import (
     TABLES_COLUMNS,
     TABLES_NAMES,
 )
-from .users_functions import _check_permissions, PERMISSION_POWER
-from ..jwt_functions import check_jwt, decrypt_auth_token, _search_in_sub_dicts
-from .utils import _get_id_by_url
-from .tags import _get_tag_by_story, _add_tags, get_tags_by_event
-from .story import _fetch_extra_data
+from ...server_utils.time_functions import get_timestamp
 from ...time_extractors import TimeExtract
 
 
-@check_jwt
+@check_jwt(log=True)
 def add_event(timeline_url, new_event, **kargs):
     """
     adds and updates new event to timeline.
@@ -190,7 +192,7 @@ def _add_event_data(timeline_id, event_id, new_event, jwt_token):
     print("inserted data")
 
 
-@check_jwt
+@check_jwt(log=True)
 def delete_event(event_id, **kargs):
     jwt_token = _search_in_sub_dicts(kargs, "jwt_token")
     username = decrypt_auth_token(jwt_token)
@@ -245,7 +247,7 @@ def _get_single_event(event_id, jwt_token):
     return result
 
 
-@check_jwt
+@check_jwt()
 def extract_time(**kargs):
     """
     Extracts the time from the link.

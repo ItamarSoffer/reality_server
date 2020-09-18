@@ -1,7 +1,9 @@
-from flask import make_response, send_file
 import os
+import uuid
 from datetime import datetime
+
 import pandas as pd
+from flask import make_response, send_file
 from story_server.api.__main__ import APP_DB
 from story_server.server_utils.consts import (
     TABLES_COLUMNS,
@@ -10,16 +12,15 @@ from story_server.server_utils.consts import (
     XLSX_FOLDER,
     IMPORT_XLSX_FOLDER
 )
-import uuid
-from ...server_utils.time_functions import get_timestamp
+
+from .tags import _get_tag_by_story, _add_tags
+from .utils import _is_url_exists, _get_id_by_url
 # from .posts import _add_tags
 from ..jwt_functions import check_jwt, _search_in_sub_dicts
-from .utils import _is_url_exists, _get_id_by_url
-from .tags import _get_tag_by_story, _add_tags
+from ...server_utils.time_functions import get_timestamp
 
 
-
-@check_jwt
+@check_jwt(log=True)
 def get_timeline_xlsx_file(timeline_url, **kwargs):
     if not _is_url_exists(timeline_url):
         return make_response(

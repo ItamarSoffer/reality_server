@@ -1,12 +1,13 @@
-from ..__main__ import APP_DB
 from flask import make_response
-from ...server_utils.time_functions import get_timestamp
-from ...server_utils.consts import TABLES_NAMES, TABLES_COLUMNS
+
 from .users_functions import check_jwt, _search_in_sub_dicts, decrypt_auth_token
 from .utils import _get_id_by_url
+from ..__main__ import APP_DB
+from ...server_utils.consts import TABLES_NAMES, TABLES_COLUMNS
+from ...server_utils.time_functions import get_timestamp
 
 
-@check_jwt
+@check_jwt(log=True)
 def add_favorite(timeline_url, **kargs):
     """
     Adds a story to favorite list.
@@ -29,7 +30,7 @@ def add_favorite(timeline_url, **kargs):
     return make_response("Added story to favorites", 200)
 
 
-@check_jwt
+@check_jwt(log=True)
 def del_favorite(timeline_url, **kargs):
     """
     :param timeline_url: Story URL
@@ -50,7 +51,7 @@ def del_favorite(timeline_url, **kargs):
     return make_response("Removed from favorites", 200)
 
 
-@check_jwt
+@check_jwt()
 def get_favorites(**kargs):
     jwt_token = _search_in_sub_dicts(kargs, "jwt_token")
     username = decrypt_auth_token(jwt_token)

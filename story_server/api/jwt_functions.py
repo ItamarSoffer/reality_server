@@ -1,11 +1,13 @@
-import os
-import jwt
 import datetime
 import functools
-from flask import make_response
 import json
 
-from ..server_utils.consts import SECRET_KEY
+import jwt
+from flask import make_response
+
+from .__main__ import APP_DB
+from ..server_utils.consts import SECRET_KEY, TABLES_NAMES, TABLES_COLUMNS
+from ..server_utils.time_functions import get_timestamp
 
 
 def generate_auth_token(user_id, password):
@@ -54,19 +56,32 @@ def decrypt_auth_token(auth_token, return_all=False):
         return 'INVALID TOKEN: Please log in again.'
 
 
-def check_jwt(func):
-    @functools.wraps(func)
-    def run_if_valid_jwt(*args, **kargs):
-        jwt_token = _search_in_sub_dicts(kargs, 'jwt_token')
-        if jwt_token is None:
-            return make_response("No JWT was supllied!", 400)
-        auth_check = decrypt_auth_token(str.encode(jwt_token))
-        if not auth_check.startswith("INVALID TOKEN"):
-            return func(*args, **kargs)
-        else:
-            return make_response(auth_check, 401)
+def check_jwt(log=False):
+    """
+    Validates the JWT token.
+    If log- logs the action to the DB.
+    :param log:
+    :return: the jwt decorator
+    """
 
-    return run_if_valid_jwt
+    def _check_jwt_decorator(func):
+        @functools.wraps(func)
+        def run_if_valid_jwt(*args, **kargs):
+            jwt_token = _search_in_sub_dicts(kargs, 'jwt_token')
+            if jwt_token is None:
+                return make_response("No JWT was supllied!", 400)
+            auth_check = decrypt_auth_token(str.encode(jwt_token))
+            if not auth_check.startswith("INVALID TOKEN"):
+                if log:
+                    story_url = _search_in_sub_dicts(kargs, 'timeline_url')
+                    log_action(username=auth_check, func_name=func.__name__, jwt_token=jwt_token, story_url=story_url)
+                return func(*args, **kargs)
+            else:
+                return make_response(auth_check, 401)
+
+        return run_if_valid_jwt
+
+    return _check_jwt_decorator
 
 
 def _search_in_sub_dicts(main_dict, search_key):
@@ -98,3 +113,24 @@ def checker(*args, **kargs):
     print("IN FUNC")
     print("ARGS", str(args))
     print("KARGS", str(kargs))
+
+
+def log_action(username, func_name, jwt_token, story_url):
+    """
+    logs the user action into the DB.
+    logs the function invoked and user.
+    :param username:
+    :param func_name:
+    :param jwt_token:
+    :param story_url:
+    :return:
+    """
+    APP_DB.insert(table=TABLES_NAMES["USERS_LOGS"],
+                  columns=TABLES_COLUMNS["USERS_LOGS"],
+                  data=[
+                      username,
+                      func_name,
+                      jwt_token,
+                      story_url,
+                      get_timestamp()
+                  ])

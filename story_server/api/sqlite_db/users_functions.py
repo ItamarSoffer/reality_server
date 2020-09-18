@@ -1,13 +1,13 @@
 from flask import make_response
+
+from .utils import _get_id_by_url, _is_url_exists
 from ..__main__ import APP_DB
+from ..jwt_functions import generate_auth_token, check_jwt, _search_in_sub_dicts, decrypt_auth_token
 from ...server_utils.consts import (
     TABLES_COLUMNS,
     TABLES_NAMES,
 )
 from ...server_utils.time_functions import get_timestamp
-from .utils import _get_id_by_url, _is_url_exists
-
-from ..jwt_functions import generate_auth_token, check_jwt, _search_in_sub_dicts, decrypt_auth_token
 
 PERMISSION_POWER = {
     None: -1,
@@ -114,7 +114,7 @@ def _calc_max_permission(*permissions_data):
     return max_permission_level
 
 # good
-@check_jwt
+@check_jwt()
 def check_permissions(timeline_url, **kargs):
     """
 
@@ -213,7 +213,8 @@ def _set_permissions_for_user(timeline_url, username, role, adding_user, return_
             response = make_response('Permissions Error', 201)
         return response
 
-@check_jwt
+
+@check_jwt(log=True)
 def set_permissions(timeline_url, permissions_data, **kargs):
     """
     sets permission to user.
@@ -242,7 +243,7 @@ def set_permissions(timeline_url, permissions_data, **kargs):
         return _set_permissions_for_user(timeline_url, username, role, adding_user)
 
 
-@check_jwt
+@check_jwt()
 def permitted_users(timeline_url, **kargs):
     """
     returns all users that has permissions, and roles
@@ -265,7 +266,7 @@ def permitted_users(timeline_url, **kargs):
     return APP_DB.query_to_json(query, args=[timeline_url])
 
 
-@check_jwt
+@check_jwt()
 def get_story_users(**kargs):
     """
     returns a list of usernames and display names.

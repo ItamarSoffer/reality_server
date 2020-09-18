@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 
 SECRET_KEY = os.urandom(24)
 SECRET_KEY = b'\xc0x\x07"\x87\r@\x97\xb6\xe5~H\x05\xe5E\x88\x1c\x94\xb3`\x89\xd6te'
@@ -31,7 +31,8 @@ TABLES_COLUMNS = {
     "PERMISSIONS": ["timeline_id", "timeline_url", "username", "role", "insertion_time"],
     "STORY_TAGS": ['story_id', 'tag_id', 'tag_name', 'tag_color', 'create_time'],
     "EVENTS_TAGS": ['story_id', 'event_id', 'tag_id', 'insertion_time'],
-    "FAVORITES": ['story_id', 'username', 'insertion_time']
+    "FAVORITES": ['story_id', 'username', 'insertion_time'],
+    "USERS_LOGS": ['username', 'func_name', 'jwt_token', 'story_url', 'insertion_time']
 
 }
 
@@ -45,11 +46,12 @@ TABLES_NAMES = {
     "PERMISSIONS": "permissions",
     "EVENTS_TAGS": "events_tags",
     "STORY_TAGS": "story_tags",
-    "FAVORITES": 'favorites'
+    "FAVORITES": "favorites",
+    "USERS_LOGS": "USERS_LOGS"
 
 }
 
-RESERVED_TIMELINE_NAMES = ["add", "delete", "del", ".", "?", "/"]
+RESERVED_TIMELINE_NAMES = ["add", "delete", "del", ".", "?", "/", "story"]
 
 SMALL_ABC = [chr(i) for i in range(ord("a"), ord("z") + 1)]
 CAPITAL_ABC = [chr(i) for i in range(ord("A"), ord("Z") + 1)]
