@@ -222,7 +222,7 @@ def set_permissions(timeline_url, permissions_data, **kargs):
     :param permissions_data: the data
     :return:
     """
-    jwt_token = _search_in_sub_dicts(kargs, "jwt_token")
+    jwt_token = _search_in_sub_dicts(permissions_data, "jwt_token")
     user = decrypt_auth_token(jwt_token)
     if _check_permissions(timeline_url, user, return_level=True) < PERMISSION_POWER['owner']:
         return make_response(
