@@ -1,5 +1,5 @@
 import uuid
-
+import logging
 from flask import make_response
 
 from .tags import _get_events_by_tags, get_tags_by_event
@@ -137,7 +137,6 @@ def get_timelines_by_user(num=None, **kargs):
             OR description LIKE '%{search_string}%')
             """ \
                 .format(search_string=search_string)
-        print(search_string_query)
 
     timelines_query = """
         WITH event_counter AS 
@@ -302,10 +301,10 @@ def _fetch_extra_data(events, username):
                 extra_data = extra_data_parser.match_parser()
                 if extra_data:
                     line['extra_data'] = extra_data
-                    print("fetched {} after {}".format(line['link'], time.perf_counter() - start))
+                    logging.info("fetched {} after {}".format(line['link'], time.perf_counter() - start))
 
     end = time.perf_counter()
-    print("took: {} seconds".format(end - start))
+    logging.info("took: {} seconds".format(end - start))
     return events
 
 

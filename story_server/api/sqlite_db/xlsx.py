@@ -1,6 +1,7 @@
 import os
 import uuid
 from datetime import datetime
+import logging
 
 import pandas as pd
 from flask import make_response, send_file
@@ -40,7 +41,6 @@ def get_timeline_xlsx_file(timeline_url, **kwargs):
 
 # @check_jwt
 def import_xlsx_file(timeline_url, **kwargs):
-    print(kwargs)
     upfile_raw = _search_in_sub_dicts(kwargs, 'upfile')
 
     file_name = '{timeline_url}_upload_{time}.xlsx'\
@@ -53,16 +53,16 @@ def import_xlsx_file(timeline_url, **kwargs):
 
     xlsx_data = pd.concat(pd.read_excel(output_file, sheet_name=None), ignore_index=True)
     columns = xlsx_data.columns.tolist()
-    print(columns)
+    # logging.info(columns)
     valid_column_names = ["title", "content", "link", "event_time", "color", "icon", "create_user", "tags"]
     if 'title' not in columns:
-        print("missing title field")
+        logging.warning("missing title field")
         return make_response({"code": 201, 'message': "missing title field"}, 201)
     elif 'event_time' not in columns:
-        print("missing event_time field")
+        logging.warning("missing event_time field")
         return make_response({"code": 201, 'message': "missing event_time field"}, 201)
     elif not all(elem in valid_column_names for elem in columns):
-        print("There are non valid field names")
+        logging.warning("There are non valid field names")
         return make_response({"code": 201, 'message': "There are non valid field names"}, 201)
     else:
         timeline_id = _get_id_by_url(timeline_url)

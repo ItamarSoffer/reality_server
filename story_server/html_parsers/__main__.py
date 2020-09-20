@@ -41,8 +41,8 @@ class HtmlParser(object):
                                 "<iframe .*></iframe>": self.iframe_parser}
         for regex_pattern, parse_function in pattern_parsers_dict.items():
             if re.findall(regex_pattern, self.url):
-                # print("RUNS ON {}".format(self.url))
-                # print("MATCHES REGEX: {}".format(regex_pattern))
+                # logging.info("RUNS ON {}".format(self.url))
+                # logging.info("MATCHES REGEX: {}".format(regex_pattern))
                 return parse_function()
         return None
 

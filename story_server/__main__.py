@@ -3,6 +3,9 @@ from flask_cors import CORS
 import connexion
 import os
 
+from .server_utils.logger import create_log
+from .server_utils.consts import LOGS_DIR
+
 UI = True
 
 # Create the application instance
@@ -43,6 +46,7 @@ def main():
 
 
 if __name__ == "__main__":
+    create_log(log_dir_path=LOGS_DIR)
     main()
 # The full project:
 # https://github.com/realpython/materials/blob/master/flask-connexion-rest/version_3/swagger.yml

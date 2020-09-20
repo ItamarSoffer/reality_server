@@ -3,6 +3,7 @@ import json
 import re
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
+import logging
 
 
 """
@@ -35,8 +36,8 @@ class TimeExtract(object):
         pattern_parsers_dict = {".*www.ynet.co.il/articles/.*": self.ynet_parser}
         for regex_pattern, extract_function in pattern_parsers_dict.items():
             if re.findall(regex_pattern, self.link):
-                # print("RUNS ON {}".format(self.url))
-                # print("MATCHES REGEX: {}".format(regex_pattern))
+                # logging.info("RUNS ON {}".format(self.url))
+                # logging.info("MATCHES REGEX: {}".format(regex_pattern))
                 return extract_function()
         return None
 
@@ -52,7 +53,7 @@ class TimeExtract(object):
                 date = date - timedelta(hours=3)
                 return TimeExtract._return_dict(date)
             except Exception as e:
-                print(e)
+                logging.error(e)
                 pass
         return None
 

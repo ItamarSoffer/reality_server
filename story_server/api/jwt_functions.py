@@ -1,6 +1,7 @@
 import datetime
 import functools
 import json
+import logging
 
 import jwt
 from flask import make_response
@@ -102,7 +103,7 @@ def _search_in_sub_dicts(main_dict, search_key):
 @check_jwt
 def basic_jwt_check(**kargs):
     from ..server_utils.time_functions import get_timestamp
-    print(get_timestamp())
+    logging.info(get_timestamp())
     jwt_token = _search_in_sub_dicts(kargs, search_key="jwt_token")
     user = decrypt_auth_token(jwt_token)
     return make_response('JWT token is valid., user: {user}'.format(user=user), 200)
@@ -110,9 +111,9 @@ def basic_jwt_check(**kargs):
 
 @check_jwt
 def checker(*args, **kargs):
-    print("IN FUNC")
-    print("ARGS", str(args))
-    print("KARGS", str(kargs))
+    logging.info("IN FUNC")
+    logging.info("ARGS", str(args))
+    logging.info("KARGS", str(kargs))
 
 
 def log_action(username, func_name, jwt_token, story_url):
