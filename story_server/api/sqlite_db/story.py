@@ -56,7 +56,7 @@ def create_timeline(new_timeline, **kargs):
     _add_permissions(timeline_url=url,
                      username=create_user,
                      role="creator")
-    return make_response("new Timeline '{name}' created!".format(name=name), 200)
+    return make_response("new Story '{name}' created!".format(name=name), 200)
 
 
 # ############### GETS ###############
@@ -77,8 +77,8 @@ def get_all_timelines(num=None, **kargs):
         search_string_query = \
             """WHERE (name LIKE '%{search_string}%'
             OR description LIKE '%{search_string}%')
-            """\
-            .format(search_string=search_string)
+            """ \
+                .format(search_string=search_string)
     timelines_query = """
     WITH event_counter AS 
     (
@@ -135,8 +135,8 @@ def get_timelines_by_user(num=None, **kargs):
         search_string_query = \
             """AND(name LIKE '%{search_string}%'
             OR description LIKE '%{search_string}%')
-            """\
-            .format(search_string=search_string)
+            """ \
+                .format(search_string=search_string)
         print(search_string_query)
 
     timelines_query = """
@@ -251,8 +251,8 @@ def get_timeline(timeline_url, **kargs):
             """AND (header LIKE '%{search_string}%'
             OR text LIKE '%{search_string}%'
             OR link LIKE '%{search_string}%')
-            """\
-            .format(search_string=search_string)
+            """ \
+                .format(search_string=search_string)
 
     if tags:
         relevant_event_ids = _get_events_by_tags(timeline_id, tags)
@@ -270,7 +270,7 @@ def get_timeline(timeline_url, **kargs):
 	 {max_time_string}
 	 {search_string_query}
 	 {events_tags_string_query}
-     ORDER BY event_time DESC """\
+     ORDER BY event_time DESC """ \
         .format(min_time_string=min_time_string,
                 max_time_string=max_time_string,
                 search_string_query=search_string_query,
@@ -323,7 +323,7 @@ def delete_timeline(timeline_id, **kargs):
 
     role = role[0][0]
     if PERMISSION_POWER[role] < PERMISSION_POWER['owner']:
-        return make_response("User doesnt have permissions to delete timeline!", 201)
+        return make_response("User doesnt have permissions to delete story!", 201)
     else:
         delete_events_query = """
             DELETE
@@ -345,8 +345,13 @@ def delete_timeline(timeline_id, **kargs):
                             FROM story_tags
                             WHERE story_id = ?"""
         APP_DB.run(delete_tags_query, [timeline_id])
+        delete_favorites_query = """
+                                    DELETE
+                                    FROM favorites
+                                    WHERE story_id = ?"""
+        APP_DB.run(delete_favorites_query, [timeline_id])
 
-        return make_response("Timeline and its events deleted successfully", 200)
+        return make_response("Story and its events deleted successfully", 200)
 
 
 def _check_permission_by_timeline_id(event_id, username):
