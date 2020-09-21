@@ -32,7 +32,8 @@ TABLES_COLUMNS = {
     "STORY_TAGS": ['story_id', 'tag_id', 'tag_name', 'tag_color', 'create_time'],
     "EVENTS_TAGS": ['story_id', 'event_id', 'tag_id', 'insertion_time'],
     "FAVORITES": ['story_id', 'username', 'insertion_time'],
-    "USERS_LOGS": ['username', 'func_name', 'jwt_token', 'story_url', 'insertion_time']
+    "USERS_LOGS": ['username', 'func_name', 'jwt_token', 'story_url', 'insertion_time'],
+    "SUPPORT_REQUESTS": ['username', 'title', 'content', 'insertion_time']
 
 }
 
@@ -47,7 +48,8 @@ TABLES_NAMES = {
     "EVENTS_TAGS": "events_tags",
     "STORY_TAGS": "story_tags",
     "FAVORITES": "favorites",
-    "USERS_LOGS": "USERS_LOGS"
+    "USERS_LOGS": "USERS_LOGS",
+    "SUPPORT_REQUESTS":"support_requests",
 
 }
 

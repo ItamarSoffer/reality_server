@@ -750,6 +750,29 @@ paths:
         200:
           description: Extracted time.
 
+  /contact:
+    post:
+      operationId: story_server.api.support.contact_support
+      summary: Contacts support
+      description: sends the data to backend, where the data is saved in DB and mail is sent.
+      parameters:
+        - name: request_data
+          in: body
+          description: Support Content and jwt token.
+          required: True
+          schema:
+            allOf:
+            - $ref: '#/definitions/JwtAuth'
+            - type: object
+              properties:
+                title:
+                  description: Link to extract time from
+                content:
+                  description: Link to extract time from
+      responses:
+        200:
+          description: contant issue has been sent.
+
 definitions:
   JwtAuth:
     type: object
