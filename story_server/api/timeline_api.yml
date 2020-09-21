@@ -248,6 +248,57 @@ paths:
         200:
           description: Successfully created new event
 
+  /timeline/{timeline_url}/edit:
+    post:
+      operationId: story_server.api.posts.edit_event
+      tags:
+        - Timeline
+      summary: edit an exists story event
+      description: edit an exists story event
+      parameters:
+        - name: timeline_url
+          in: path
+          description: the url of the story
+          type: string
+          required: True
+        - name: new_event
+          in: body
+          description: new_event to create
+          required: True
+          schema:
+            allOf:
+            - $ref: '#/definitions/JwtAuth'
+            - type: object
+              properties:
+                event_id:
+                  type: string
+                header:
+                  type: string
+                  description: main header of event.
+                text:
+                  description: event text.
+                date:
+                  description: the date the event accured.
+                hour:
+                  description: the hour the event accured.
+                link:
+                  description: additional link for more data for the event.
+                frame_color:
+                  description: color for icon and frame
+                icon:
+                  description: the icon for the event
+                tags:
+                  type: array
+                  description: the tags of the event
+              required:
+                - event_id
+                - date
+              additionalProperties:
+                type: string
+      responses:
+        200:
+          description: Successfully Edited event
+
   /timeline/{timeline_url}/get_xlsx:
       post:
         operationId: story_server.api.gets.get_timeline_xlsx_file

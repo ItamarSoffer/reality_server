@@ -10,5 +10,5 @@ if MODE == "SQLITE":
     # new
     from .sqlite_db.tags import edit_tag
     from .sqlite_db.story import edit_name_description
-
+    from .sqlite_db.event import edit_event
 
