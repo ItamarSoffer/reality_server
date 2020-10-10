@@ -219,19 +219,44 @@ def get_timeline(timeline_url, **kargs):
         return make_response(
             "User {user} has no read permissions".format(user=user), 201
         )
-    args = [timeline_id]
-
     fetch_extra_data = _search_in_sub_dicts(kargs, 'extra_data')
-
     min_time = _search_in_sub_dicts(kargs, "min_time")
     max_time = _search_in_sub_dicts(kargs, "max_time")
     search_string = _search_in_sub_dicts(kargs, "search_string")
     tags = _search_in_sub_dicts(kargs, "tags")
 
-    # TODO: check that the search string is valid before.
-    # TODO: separate from here- gets the id, min_time, max_time, search_string, tags, fetch_extra_data
-    # TODO: INNER RETURN: events as list.
-    # TODO: outer return: dict
+    if search_string and _not_valid_sql_input(search_string):
+        # the if order is important: first check that there is a string_string.
+        return make_response('Non Valid Search!', 201)
+
+    results = _get_story(story_id=timeline_id,
+                         jwt_token=jwt_token,
+                         min_time=min_time,
+                         max_time=max_time,
+                         search_string=search_string,
+                         tags=tags,
+                         fetch_extra_data=fetch_extra_data)
+    if results is None:
+        return make_response("Query Error!", 500)
+    else:
+        return {"events": results}
+
+
+def _get_story(story_id, jwt_token, min_time, max_time, search_string, tags, fetch_extra_data):
+    """
+    Inner function for getting the story events data.
+    fetches the events without permissions.
+    Make sure to confirm permissions before calling this function!
+    :param story_id: story ID
+    :param jwt_token: user JWT token.
+    :param min_time: min event time
+    :param max_time: max event time
+    :param search_string: filter string
+    :param tags: tags to fetch
+    :param fetch_extra_data: Bool to fetch extraData or not.
+    :return: events. as list.
+    """
+    args = [story_id]
 
     min_time_string = ''
     max_time_string = ''
@@ -247,10 +272,6 @@ def get_timeline(timeline_url, **kargs):
         args.append(max_time)
 
     if search_string:
-        # check against SQL injection
-        # search_string = search_string.encode('utf-8')
-        if _not_valid_sql_input(search_string):
-            return make_response('Non Valid Search!', 201)
         search_string_query = \
             """AND (header LIKE '%{search_string}%'
             OR text LIKE '%{search_string}%'
@@ -259,7 +280,7 @@ def get_timeline(timeline_url, **kargs):
                 .format(search_string=search_string)
 
     if tags:
-        relevant_event_ids = _get_events_by_tags(timeline_id, tags)
+        relevant_event_ids = _get_events_by_tags(story_id, tags)
         events_tags_string_query = \
             """AND (event_id in ({events_place}))
             """ \
@@ -267,30 +288,29 @@ def get_timeline(timeline_url, **kargs):
         args += relevant_event_ids
 
     get_timeline_query = """
-    SELECT *
-      FROM events
-	 WHERE timeline_id = ?
-	 {min_time_string}
-	 {max_time_string}
-	 {search_string_query}
-	 {events_tags_string_query}
-     ORDER BY event_time DESC """ \
+        SELECT *
+          FROM events
+    	 WHERE timeline_id = ?
+    	 {min_time_string}
+    	 {max_time_string}
+    	 {search_string_query}
+    	 {events_tags_string_query}
+         ORDER BY event_time DESC """ \
         .format(min_time_string=min_time_string,
                 max_time_string=max_time_string,
                 search_string_query=search_string_query,
                 events_tags_string_query=events_tags_string_query)
     results = APP_DB.query_to_json(query_string=get_timeline_query, args=args)
     if results is None:
-        return make_response("Query Error!", 500)
+        return None
     else:
         for line in results:
             line['tags'] = get_tags_by_event(line['event_id'])
         if fetch_extra_data:
-            jwt_token = _search_in_sub_dicts(kargs, 'jwt_token')
             username = decrypt_auth_token(jwt_token)
             results = _fetch_extra_data(results, username)
 
-        return {"events": results}
+        return results
 
 
 def _fetch_extra_data(events, username):
