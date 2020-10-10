@@ -217,7 +217,7 @@ def get_timeline(timeline_url, **kargs):
     user = decrypt_auth_token(jwt_token)
     if _check_permissions(timeline_url, user, return_level=True) < PERMISSION_POWER['read']:
         return make_response(
-            "User {user} has no write permissions".format(user=user), 201
+            "User {user} has no read permissions".format(user=user), 201
         )
     args = [timeline_id]
 
@@ -227,6 +227,11 @@ def get_timeline(timeline_url, **kargs):
     max_time = _search_in_sub_dicts(kargs, "max_time")
     search_string = _search_in_sub_dicts(kargs, "search_string")
     tags = _search_in_sub_dicts(kargs, "tags")
+
+    # TODO: check that the search string is valid before.
+    # TODO: separate from here- gets the id, min_time, max_time, search_string, tags, fetch_extra_data
+    # TODO: INNER RETURN: events as list.
+    # TODO: outer return: dict
 
     min_time_string = ''
     max_time_string = ''
